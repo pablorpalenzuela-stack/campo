@@ -1,0 +1,426 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#2f5d44">
+<title>Campo</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<style>
+:root{--tinta:#1d241f;--suave:#5b665d;--verde:#2f5d44;--verde2:#dcebe0;--linea:#d6dbd2;--fondo:#f7f8f5;--ocre:#f2e6cf;--rojo:#b3261e;--azul:#dfe6ef;--carta:#fff}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--tinta:#e8ece6;--suave:#a9b3aa;--verde:#7fb894;--verde2:#24382c;--linea:#38423a;--fondo:#151a16;--ocre:#3b3222;--azul:#243040;--carta:#1d241f}}
+:root[data-theme="dark"]{--tinta:#e8ece6;--suave:#a9b3aa;--verde:#7fb894;--verde2:#24382c;--linea:#38423a;--fondo:#151a16;--ocre:#3b3222;--azul:#243040;--carta:#1d241f}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--fondo);color:var(--tinta)}
+body{font-family:Avenir,"Avenir Next","Nunito Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-size:17px;line-height:1.5;padding:0 16px calc(96px + env(safe-area-inset-bottom))}
+h1,h2,h3{font-family:"EB Garamond",Garamond,Georgia,serif;font-weight:500;margin:.4em 0 .3em;line-height:1.15}
+h1{font-size:30px}h2{font-size:24px}h3{font-size:20px}
+p{margin:.4em 0 .8em;text-align:justify;hyphens:auto}
+.eti{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--suave);margin:14px 0 2px}
+button{font:inherit;color:inherit}
+.btn{display:block;width:100%;padding:14px 16px;margin:8px 0;border-radius:12px;border:1px solid var(--linea);background:var(--carta);text-align:left;font-size:17px}
+.btn.prim{background:var(--verde);border-color:var(--verde);color:#fff;text-align:center;font-weight:700}
+.btn.peligro{color:var(--rojo)}
+.btn small{display:block;color:var(--suave);font-size:14px}
+.btn.prim small{color:#e6f0e9}
+.fila{display:flex;gap:8px}.fila>*{flex:1}
+.mini{padding:10px 8px;text-align:center;font-size:15px}
+.barra{position:sticky;top:0;z-index:5;background:var(--fondo);padding:10px 0 6px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--linea)}
+.barra .atras{border:none;background:none;font-size:26px;padding:0 6px;line-height:1}
+.barra .tit{flex:1;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.barra .reloj{color:var(--suave);font-variant-numeric:tabular-nums}
+.dock{position:fixed;left:0;right:0;bottom:0;padding:10px 16px calc(10px + env(safe-area-inset-bottom));background:var(--fondo);border-top:1px solid var(--linea);display:flex;gap:10px;z-index:10}
+.dock button{flex:1;height:68px;border-radius:16px;border:none;font-size:18px;font-weight:700}
+.b-voz{background:var(--rojo);color:#fff}.b-voz.on{animation:lat 1s infinite}
+.b-ayuda{background:var(--verde);color:#fff}
+@keyframes lat{50%{opacity:.65}}
+.cifras{display:flex;gap:10px;margin:10px 0}.cifras div{flex:1;border-top:3px solid var(--verde);padding-top:2px;font-size:13px;color:var(--suave)}
+.cifras b{display:block;font:500 26px "EB Garamond",Georgia,serif;color:var(--tinta)}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:10px 0}
+.grid button{min-height:76px;border-radius:14px;border:1px solid var(--linea);background:var(--carta);font-size:16px;padding:8px}
+.grid button span{display:block;font-size:26px}
+.check{display:flex;gap:12px;align-items:flex-start;padding:11px 4px;border-bottom:1px solid var(--linea);cursor:pointer}
+.check .caja{flex:none;width:26px;height:26px;border:2px solid var(--verde);border-radius:7px;margin-top:1px;display:flex;align-items:center;justify-content:center;font-weight:700;color:#fff}
+.check.ok .caja{background:var(--verde)}
+.check.ok .txt{color:var(--suave)}
+.pista{background:var(--ocre);border-radius:10px;padding:10px 12px;margin:10px 0;font-size:15px}
+.esp{display:flex;gap:10px;align-items:flex-start;padding:9px 2px;border-bottom:1px solid var(--linea)}
+.esp img{flex:none;width:64px;height:64px;object-fit:cover;border-radius:8px;background:var(--linea)}
+.esp .sinfoto{flex:none;width:64px;height:64px;border-radius:8px;background:var(--linea)}
+.esp .n{flex:1;min-width:0}.esp i{color:var(--suave);font-size:14px;display:block}
+.esp .fj{font-size:14px;color:var(--tinta);margin-top:3px;line-height:1.35}
+.zoom{position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:40;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;color:#fff;text-align:center}
+.zoom img{max-width:100%;max-height:70vh;border-radius:10px}.zoom small{opacity:.75;margin-top:8px;font-size:12px}
+.esp .c{color:var(--suave);font-size:13px;white-space:nowrap}
+.esp.pos{background:var(--verde2);border-radius:8px;padding-left:8px}
+input[type=search],textarea{width:100%;font:inherit;padding:11px 12px;border-radius:10px;border:1px solid var(--linea);background:var(--carta);color:var(--tinta)}
+textarea{min-height:80px}
+.pest{display:flex;gap:6px;overflow-x:auto;padding:8px 0}.pest button{flex:none;border:1px solid var(--linea);background:var(--carta);border-radius:20px;padding:6px 12px;font-size:14px}
+.pest button.on{background:var(--verde);color:#fff;border-color:var(--verde)}
+.ev{padding:9px 0;border-bottom:1px solid var(--linea);font-size:15px}.ev b{font-variant-numeric:tabular-nums}
+.ev audio{width:100%;margin-top:4px}
+.aviso{background:var(--azul);border-radius:10px;padding:10px 12px;font-size:15px;margin:10px 0}
+.mapa{position:relative}.mapa img{width:100%;border-radius:10px;display:block}
+.mapa .yo{position:absolute;width:18px;height:18px;margin:-9px 0 0 -9px;border-radius:50%;background:#1a73e8;border:3px solid #fff;box-shadow:0 0 0 2px #1a73e8}
+.oculto{display:none!important}
+.grab{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:20;display:flex;align-items:center;justify-content:center}
+.grab div{background:var(--carta);border-radius:18px;padding:22px;width:84%;text-align:center}
+.grab .t{font:500 44px "EB Garamond",Georgia,serif;font-variant-numeric:tabular-nums}
+.grab .nivel{height:10px;border-radius:5px;background:var(--linea);overflow:hidden;margin:12px 0}
+.grab .nivel i{display:block;height:100%;width:0;background:var(--rojo)}
+.toast{position:fixed;left:16px;right:16px;bottom:100px;background:#1d241f;color:#fff;border-radius:10px;padding:12px 14px;z-index:30;font-size:15px}
+</style>
+</head>
+<body>
+<main id="app"></main>
+<div id="dock" class="dock oculto">
+  <button id="bVoz" class="b-voz">🎙 Nota de voz</button>
+  <button id="bAyuda" class="b-ayuda">？ Ayuda</button>
+</div>
+<div id="grab" class="grab oculto"><div>
+  <div class="eti">Grabando</div><div class="t" id="gT">0:00</div>
+  <div class="nivel"><i id="gN"></i></div>
+  <p style="text-align:center;font-size:15px;color:var(--suave)">Di qué ves, dónde y lo que la foto no recoge: sonido, olor, tacto, tamaño.</p>
+  <button class="btn prim" id="gStop">Parar y guardar</button>
+</div></div>
+<script>
+'use strict';
+const VERSION = '1.0.0';
+/* ---------- grupos de ayuda ---------- */
+const GRUPOS = [
+ {id:'lenosa', ico:'🌳', nom:'Árbol o arbusto', esp:['lenosa'],
+  fotos:['El conjunto (y otra vez al terminar)','Una ramilla con varias hojas','Una hoja por el haz, con la regla o una moneda','La misma hoja por el envés','El rabillo y la base de la hoja','Flores o frutos (también los del suelo)','La corteza a la altura del pecho'],
+  pruebas:['¿Hojas opuestas o alternas?','Frotar la hoja y oler','Tocar: ¿áspera, pegajosa, con pelos?','Romper el rabillo: ¿sale jugo blanco?','Hoja y fruto a una bolsa de papel numerada'],
+  pista:'Sin contraluz y sin otros árboles en la foto de detalle.'},
+ {id:'herbacea', ico:'🌼', nom:'Mata o hierba', esp:['herbacea'],
+  fotos:['La planta entera, con escala','Una hoja de la base y otra del tallo','La flor de frente','La flor de lado','El fruto, si lo hay','El tallo de cerca'],
+  pruebas:['¿Tallo cuadrado? (labiadas)','Oler la hoja frotada','Contar pétalos','¿Sale látex al romper?','Una ramita florida a la bolsa, si no está protegida'],
+  pista:'En espacio protegido, fotos y nada de arrancar.'},
+ {id:'cripto', ico:'🌿', nom:'Helecho, musgo o liquen', esp:['hongo','herbacea'],
+  fotos:['El conjunto sobre su soporte','De cerca, con escala','Helecho: el envés de la fronda (soros)','El soporte: roca, corteza, suelo'],
+  pruebas:['Una pizca a una bolsa de papel','Mojar y ver si cambia de forma o color'],
+  pista:'Los musgos y líquenes se ven mejor hidratados, después de llover.'},
+ {id:'seta', ico:'🍄', nom:'Seta', esp:['hongo'],
+  fotos:['La seta en su sitio, con escala','Por debajo: láminas, poros o pinchos','El pie entero y la base (¿volva?)','Cortada: ¿cambia de color?','El sustrato: madera, hojarasca, suelo'],
+  pruebas:['Oler','Sacarla entera, sin cortar el pie','En casa: esporada sobre papel blanco y negro'],
+  pista:'No comer nada identificado solo con fotos.'},
+ {id:'huella', ico:'🐾', nom:'Huella o rastro', esp:['mamifero'],
+  fotos:['En vertical, con regla o moneda al lado','Con luz rasante (o la linterna del móvil de lado)','La serie de huellas: el rastro','Excrementos con escala (sin tocar con la mano)','Hozaduras, comederos, pelos, marcas en árboles'],
+  pruebas:['Medir largo y ancho de la huella','Contar dedos y ver si marcan uñas','Medir el paso entre huellas'],
+  pista:'La escala es lo que más falta en el gabinete.'},
+ {id:'ave', ico:'🐦', nom:'Ave', esp:['ave'],
+  fotos:['Si suena, grabar ya (Merlin o nota de voz)','Zoom al máximo y ráfaga','En vuelo: silueta, cola y punta del ala','Posada: de lado, entera'],
+  pruebas:['Tamaño frente a gorrión, paloma o buitre','¿Planea o aletea? ¿Va en bando?','Dónde estaba y qué hacía'],
+  pista:'Con la Nikon y el Tamron, mejor; con el móvil, zoom 10× y ráfaga.'},
+ {id:'insecto', ico:'🦋', nom:'Insecto o araña', esp:['insecto','aracnido'],
+  fotos:['Varias fotos sin moverte, antes de acercarte','Por arriba y de lado','Con escala, si se deja','La planta o el sitio donde estaba','Mariposa: alas abiertas y cerradas'],
+  pruebas:['Capturar en un tubo, si llevas el kit','Anotar tamaño y comportamiento'],
+  pista:'Primero la foto de lejos; luego acercarse.'},
+ {id:'reptil', ico:'🦎', nom:'Reptil o anfibio', esp:['reptil','anfibio'],
+  fotos:['Sin tocarlo: el animal entero','La cabeza de cerca','El dorso y el costado','El sitio: piedra, agua, hojarasca'],
+  pruebas:['Tamaño aproximado','No manipular: casi todos están protegidos'],
+  pista:''},
+ {id:'roca', ico:'🪨', nom:'Roca o mineral', esp:[],
+  fotos:['El afloramiento de lejos','Una superficie fresca, con moneda','La textura de cerca (grano)'],
+  pruebas:['¿Raya el vidrio o la navaja?','Ácido, si lo llevas: ¿efervesce?','¿Atrae el imán?','¿Pesa más de lo que parece?'],
+  pista:'El informe previo trae la geología del sitio.'},
+ {id:'agua', ico:'💧', nom:'Agua dulce', esp:[],
+  fotos:['El punto de muestreo','El fondo y las plantas del agua'],
+  pruebas:['Frasco con agua del sitio, sin llenar del todo','Otro con fondo o plantas','Etiquetar: lugar y hora','¿Corriente o quieta? ¿Fría?'],
+  pista:'Las muestras, a la sombra y a casa el mismo día.'},
+];
+const NOMBRE_ESP = {lenosa:'Árboles y arbustos',herbacea:'Matas y hierbas',ave:'Aves',mamifero:'Mamíferos',insecto:'Insectos',aracnido:'Arácnidos',reptil:'Reptiles',anfibio:'Anfibios',hongo:'Hongos y líquenes'};
+
+/* ---------- almacenamiento (IndexedDB) ---------- */
+let dbp;
+function db(){ if(!dbp) dbp=new Promise((ok,ko)=>{const r=indexedDB.open('campo',1);r.onupgradeneeded=()=>{const d=r.result;['paquetes','sesiones','audios'].forEach(s=>d.objectStoreNames.contains(s)||d.createObjectStore(s));};r.onsuccess=()=>ok(r.result);r.onerror=()=>ko(r.error);}); return dbp;}
+async function put(st,k,v){const d=await db();return new Promise((ok,ko)=>{const t=d.transaction(st,'readwrite');t.objectStore(st).put(v,k);t.oncomplete=()=>ok();t.onerror=()=>ko(t.error);});}
+async function getv(st,k){const d=await db();return new Promise((ok,ko)=>{const r=d.transaction(st).objectStore(st).get(k);r.onsuccess=()=>ok(r.result);r.onerror=()=>ko(r.error);});}
+async function del(st,k){const d=await db();return new Promise(ok=>{const t=d.transaction(st,'readwrite');t.objectStore(st).delete(k);t.oncomplete=()=>ok();});}
+async function todos(st){const d=await db();return new Promise((ok,ko)=>{const out=[];const r=d.transaction(st).objectStore(st).openCursor();r.onsuccess=()=>{const c=r.result;if(c){out.push([c.key,c.value]);c.continue();}else ok(out);};r.onerror=()=>ko(r.error);});}
+function ls(k,v){try{if(v===undefined)return localStorage.getItem(k);if(v===null)localStorage.removeItem(k);else localStorage.setItem(k,v);}catch(e){return null;}}
+
+/* ---------- utilidades ---------- */
+const $=s=>document.querySelector(s);
+const app=$('#app');
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const pad=n=>String(n).padStart(2,'0');
+const hora=d=>{d=new Date(d);return pad(d.getHours())+':'+pad(d.getMinutes())+':'+pad(d.getSeconds());};
+const ahoraISO=()=>{const d=new Date(),o=-d.getTimezoneOffset();return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())+'T'+hora(d)+(o>=0?'+':'-')+pad(Math.floor(Math.abs(o)/60))+':'+pad(Math.abs(o)%60);};
+function toast(t,ms=2600){const e=document.createElement('div');e.className='toast';e.textContent=t;document.body.appendChild(e);setTimeout(()=>e.remove(),ms);}
+function posicion(){return new Promise(ok=>{if(!navigator.geolocation)return ok(null);navigator.geolocation.getCurrentPosition(p=>ok({lat:+p.coords.latitude.toFixed(6),lon:+p.coords.longitude.toFixed(6),prec:Math.round(p.coords.accuracy)}),()=>ok(null),{enableHighAccuracy:true,maximumAge:30000,timeout:8000});});}
+
+/* ---------- estado ---------- */
+let S=null;      // sesión activa
+let P=null;      // paquete de la sesión
+let pila=[];     // historial de pantallas
+async function guardarS(){ if(S) await put('sesiones',S.id,S); }
+async function evento(e){ e.t=ahoraISO(); S.eventos.push(e); await guardarS(); const pos=await posicion(); if(pos){e.pos=pos; await guardarS();} return e; }
+
+/* ---------- navegación ---------- */
+function ir(fn,...args){pila.push([fn,args]);fn(...args);window.scrollTo(0,0);history.pushState({n:pila.length},'');}
+window.addEventListener('popstate',e=>{
+  const n=Math.max(1,(e.state&&e.state.n)||1);
+  if(pila.length<=1&&n<=1){ inicioOPanel(); return; }
+  while(pila.length>n) pila.pop();
+  const [fn,args]=pila[pila.length-1]; fn(...args); window.scrollTo(0,0);
+});
+function inicioOPanel(){ const [fn,args]=pila[pila.length-1]||[inicio,[]]; fn(...args); }
+document.addEventListener('keydown',e=>{if(e.altKey&&e.key==='ArrowLeft'){e.preventDefault();history.back();}});
+function barra(tit,conAtras=true){return `<div class="barra">${conAtras?'<button class="atras" onclick="history.back()" aria-label="Atrás">←</button>':''}<div class="tit">${esc(tit)}</div>${S?'<div class="reloj" id="reloj"></div>':''}</div>`;}
+function dock(v){$('#dock').classList.toggle('oculto',!v);}
+setInterval(()=>{const r=$('#reloj');if(r&&S){const s=Math.floor((Date.now()-new Date(S.inicio))/1000);r.textContent=Math.floor(s/3600)+':'+pad(Math.floor(s%3600/60));}},1000);
+
+/* ---------- pantallas ---------- */
+async function inicio(){
+  dock(false);
+  const paqs=(await todos('paquetes')).map(x=>x[1]).sort((a,b)=>(b.fecha||'').localeCompare(a.fecha||''));
+  const ses=(await todos('sesiones')).map(x=>x[1]).sort((a,b)=>b.inicio.localeCompare(a.inicio));
+  const activa=ses.find(s=>!s.fin);
+  app.innerHTML=`<div class="eti">Asistente del naturalista</div><h1>Campo</h1>
+  ${activa?`<button class="btn prim" id="cont">Seguir con la salida<small>${esc(activa.titulo)} · desde las ${hora(activa.inicio).slice(0,5)}</small></button>`:''}
+  <div class="eti">Informes previos en el teléfono</div>
+  ${paqs.length?paqs.map(p=>`<button class="btn" data-p="${esc(p.id)}">${esc(p.titulo)}<small>${esc(p.fecha)} · ${Object.values(p.especies||{}).reduce((a,l)=>a+l.length,0)} especies esperables</small></button>`).join(''):'<p style="color:var(--suave)">Todavía no hay ninguno.</p>'}
+  <label class="btn" style="text-align:center">📥 Cargar informe previo (.campo.json)<input type="file" id="fich" accept=".json,application/json" class="oculto"></label>
+  <button class="btn" id="libre">Salida sin informe previo</button>
+  ${ses.filter(s=>s.fin).length?`<div class="eti">Salidas terminadas</div>`+ses.filter(s=>s.fin).slice(0,8).map(s=>`<button class="btn" data-s="${esc(s.id)}">${esc(s.titulo)}<small>${s.inicio.slice(0,10)} · ${s.eventos.length} anotaciones${s.exportada?' · exportada':''}</small></button>`).join(''):''}
+  <p style="color:var(--suave);font-size:13px;margin-top:18px">Versión ${VERSION}. Funciona sin conexión una vez instalada. Las fotos se hacen con la cámara del teléfono; aquí quedan las notas de voz y las ayudas, con su hora, para encajarlas después con las fotos y el track.</p>`;
+  if(activa) $('#cont').onclick=()=>abrirSesion(activa.id);
+  app.querySelectorAll('[data-p]').forEach(b=>b.onclick=()=>ir(verPaquete,b.dataset.p));
+  app.querySelectorAll('[data-s]').forEach(b=>b.onclick=()=>ir(verTerminada,b.dataset.s));
+  $('#fich').onchange=cargarFichero;
+  $('#libre').onclick=()=>empezar(null);
+}
+async function cargarFichero(ev){
+  const f=ev.target.files[0]; if(!f) return;
+  try{
+    const p=JSON.parse(await f.text());
+    if(p.formato!=='campo-1'||!p.id) throw new Error('No es un informe previo de Campo');
+    await put('paquetes',p.id,p); toast('Cargado: '+p.titulo); ir(verPaquete,p.id);
+  }catch(e){ toast('No se pudo cargar: '+e.message,4000); }
+}
+async function verPaquete(id){
+  dock(false);
+  const p=await getv('paquetes',id); if(!p){inicio();return;}
+  app.innerHTML=barra('Informe previo')+`<div class="eti">${esc(p.fecha)}</div><h2>${esc(p.titulo)}</h2>
+  <button class="btn prim" id="emp">Empezar la salida</button>
+  ${seccionesHTML(p)}
+  <button class="btn" id="vesp">Especies esperables</button>
+  ${p.mapa?'<button class="btn" id="vmap">Mapa</button>':''}
+  <button class="btn peligro" id="borra">Quitar este informe del teléfono</button>`;
+  $('#emp').onclick=()=>empezar(p);
+  $('#vesp').onclick=()=>ir(esperables,p.id,null,null);
+  if(p.mapa) $('#vmap').onclick=()=>ir(verMapa,p.id);
+  $('#borra').onclick=async()=>{if(confirmar('¿Quitar el informe?')){await del('paquetes',id);history.back();}};
+}
+function confirmar(t){return window.confirm(t);}
+function espHTML(e,pos){
+  return `<div class="esp ${pos?'pos':''}" data-e="${esc(e.cien)}">${e.foto?`<img src="${e.foto}" alt="" data-z="${esc(e.cien)}">`:'<div class="sinfoto"></div>'}
+  <div class="n">${esc(e.comun||e.cien)}${e.comun?`<i>${esc(e.cien)}</i>`:''}${e.fijarse?`<div class="fj">👁 ${esc(e.fijarse)}</div>`:''}</div><div class="c">${e.citas_epoca} / ${e.citas}</div></div>`;
+}
+function activarZoom(lista){
+  app.querySelectorAll('[data-z]').forEach(im=>im.onclick=ev=>{ev.stopPropagation();const e=lista.find(x=>x.cien===im.dataset.z);if(!e)return;
+    const z=document.createElement('div');z.className='zoom';z.innerHTML=`<img src="${e.foto}" alt=""><div style="margin-top:10px"><b>${esc(e.comun||e.cien)}</b> <i>${esc(e.cien)}</i></div>${e.fijarse?`<div style="margin-top:6px">${esc(e.fijarse)}</div>`:''}<small>Foto: iNaturalist, ${esc(e.foto_autor||'')}</small>`;
+    z.onclick=()=>z.remove();document.body.appendChild(z);});
+}
+function seccionesHTML(p){return (p.secciones||[]).map(s=>`<div class="eti">${esc(s.titulo)}</div>${s.html}`).join('');}
+async function empezar(p){
+  const d=new Date();
+  S={id:'s'+d.getTime(),paquete:p?p.id:null,titulo:p?p.titulo:'Salida libre '+d.toLocaleDateString('es-ES'),inicio:ahoraISO(),fin:null,eventos:[],notas:0,version:VERSION};
+  await guardarS(); ls('campo.activa',S.id);
+  await evento({tipo:'inicio'});
+  pila=[[inicio,[]]]; abrirSesion(S.id);
+}
+async function abrirSesion(id){
+  S=await getv('sesiones',id); P=S.paquete?await getv('paquetes',S.paquete):null;
+  pila=[[inicio,[]]]; ir(panel);
+}
+function panel(){
+  dock(true);
+  const ay=S.eventos.filter(e=>e.tipo==='ayuda').length, no=S.eventos.filter(e=>e.tipo==='nota').length;
+  app.innerHTML=barra(S.titulo)+`
+  <div class="cifras"><div><b>${no}</b>notas de voz</div><div><b>${ay}</b>ayudas</div><div><b>${hora(S.inicio).slice(0,5)}</b>inicio</div></div>
+  <div class="aviso">Haz las fotos con la cámara normal. Pulsa <b>Nota de voz</b> para contar lo que la foto no recoge, y <b>Ayuda</b> para ver qué fotos y pruebas pide cada grupo.</div>
+  <div class="fila">${P?'<button class="btn mini" id="vinf">Informe</button><button class="btn mini" id="vesp">Esperables</button>':''}${P&&P.mapa?'<button class="btn mini" id="vmap">Mapa</button>':''}<button class="btn mini" id="vdia">Diario</button></div>
+  <button class="btn" id="txt">✎ Nota escrita</button>
+  <button class="btn peligro" id="fin" style="margin-top:22px">Terminar la salida y guardar</button>`;
+  if(P){$('#vinf').onclick=()=>ir(verInforme);$('#vesp').onclick=()=>ir(esperables,P.id,null,null);}
+  if(P&&P.mapa) $('#vmap').onclick=()=>ir(verMapa,P.id);
+  $('#vdia').onclick=()=>ir(diario,S.id);
+  $('#txt').onclick=()=>ir(notaEscrita);
+  $('#fin').onclick=terminar;
+}
+function verInforme(){dock(true);app.innerHTML=barra('Informe previo')+`<h2>${esc(P.titulo)}</h2>`+seccionesHTML(P);}
+function notaEscrita(){
+  dock(false);
+  app.innerHTML=barra('Nota escrita')+`<textarea id="ta" placeholder="Qué ves, dónde, lo que la foto no recoge…"></textarea><button class="btn prim" id="ok">Guardar</button>`;
+  $('#ta').focus();
+  $('#ok').onclick=async()=>{const t=$('#ta').value.trim();if(t){await evento({tipo:'texto',texto:t});toast('Nota guardada');}history.back();};
+}
+function ayuda(){
+  dock(true);
+  app.innerHTML=barra('Ayuda: ¿qué es?')+`<div class="grid">${GRUPOS.map(g=>`<button data-g="${g.id}"><span>${g.ico}</span>${esc(g.nom)}</button>`).join('')}</div>`;
+  app.querySelectorAll('[data-g]').forEach(b=>b.onclick=()=>ir(grupo,b.dataset.g));
+}
+function grupo(gid){
+  dock(true);
+  const g=GRUPOS.find(x=>x.id===gid);
+  const sel={fotos:new Set(),pruebas:new Set(),posibles:new Set()};
+  const pinta=()=>{
+    const lista=P?g.esp.flatMap(k=>(P.especies[k]||[])):[];
+    const q=($('#bq')?.value||'').toLowerCase();
+    app.innerHTML=barra(g.ico+' '+g.nom)+`
+    <div class="eti">Fotos que necesitará el gabinete</div>
+    ${g.fotos.map((f,i)=>`<div class="check ${sel.fotos.has(i)?'ok':''}" data-f="${i}"><div class="caja">${sel.fotos.has(i)?'✓':''}</div><div class="txt">${esc(f)}</div></div>`).join('')}
+    <div class="eti">Pruebas sobre el terreno</div>
+    ${g.pruebas.map((f,i)=>`<div class="check ${sel.pruebas.has(i)?'ok':''}" data-r="${i}"><div class="caja">${sel.pruebas.has(i)?'✓':''}</div><div class="txt">${esc(f)}</div></div>`).join('')}
+    ${g.pista?`<div class="pista">${esc(g.pista)}</div>`:''}
+    <button class="btn prim" id="gok">Anotar y volver</button>
+    ${lista.length?`<div class="eti">Esperables aquí (${lista.length}) · toca si te parece</div><input type="search" id="bq" placeholder="Buscar nombre…" value="${esc(q)}">
+    ${lista.filter(e=>!q||(e.comun+' '+e.cien).toLowerCase().includes(q)).slice(0,60).map(e=>espHTML(e,sel.posibles.has(e.cien))).join('')}
+    <p style="font-size:13px;color:var(--suave)">Cifras: citas en esta época / en todo el año (GBIF). ${esc(P.fuente_especies||'')}</p>`:''}`;
+    app.querySelectorAll('[data-f]').forEach(x=>x.onclick=()=>{const i=+x.dataset.f;sel.fotos.has(i)?sel.fotos.delete(i):sel.fotos.add(i);pinta();});
+    app.querySelectorAll('[data-r]').forEach(x=>x.onclick=()=>{const i=+x.dataset.r;sel.pruebas.has(i)?sel.pruebas.delete(i):sel.pruebas.add(i);pinta();});
+    app.querySelectorAll('[data-e]').forEach(x=>x.onclick=()=>{const c=x.dataset.e;sel.posibles.has(c)?sel.posibles.delete(c):sel.posibles.add(c);pinta();});
+    activarZoom(lista);
+    const bq=$('#bq'); if(bq){bq.oninput=()=>{const pos=bq.selectionStart;pinta();const n=$('#bq');n.focus();n.setSelectionRange(pos,pos);};}
+    $('#gok').onclick=async()=>{
+      await evento({tipo:'ayuda',grupo:g.id,grupo_nombre:g.nom,fotos:[...sel.fotos].map(i=>g.fotos[i]),pruebas:[...sel.pruebas].map(i=>g.pruebas[i]),
+        fotos_pendientes:g.fotos.filter((_,i)=>!sel.fotos.has(i)),posibles:[...sel.posibles]});
+      toast('Anotado: '+g.nom); history.go(-2);
+    };
+  };
+  pinta();
+}
+async function esperables(pid,clave,q){
+  dock(!!S);
+  const p=P&&P.id===pid?P:await getv('paquetes',pid);
+  const claves=Object.keys(p.especies||{}).filter(k=>(p.especies[k]||[]).length);
+  clave=clave||claves[0];
+  const pinta=()=>{
+    const lista=p.especies[clave]||[]; const qq=(q||'').toLowerCase();
+    app.innerHTML=barra('Esperables')+`<div class="pest">${claves.map(k=>`<button class="${k===clave?'on':''}" data-k="${k}">${esc(NOMBRE_ESP[k]||k)} (${p.especies[k].length})</button>`).join('')}</div>
+    <input type="search" id="bq" placeholder="Buscar nombre…" value="${esc(q||'')}">
+    ${lista.filter(e=>!qq||(e.comun+' '+e.cien+' '+e.familia).toLowerCase().includes(qq)).map(e=>espHTML(e,false)).join('')}
+    <p style="font-size:13px;color:var(--suave)">Citas en esta época / en todo el año. ${esc(p.fuente_especies||'')}</p>`;
+    app.querySelectorAll('[data-k]').forEach(b=>b.onclick=()=>{clave=b.dataset.k;q='';pinta();});
+    activarZoom(lista);
+    const bq=$('#bq');bq.oninput=()=>{q=bq.value;const pos=bq.selectionStart;pinta();const n=$('#bq');n.focus();n.setSelectionRange(pos,pos);};
+  };
+  pinta();
+}
+async function verMapa(pid){
+  dock(!!S);
+  const p=P&&P.id===pid?P:await getv('paquetes',pid);
+  app.innerHTML=barra('Mapa')+`<div class="mapa" id="mp"><img src="${p.mapa.img}" alt="Mapa de la zona"><div class="yo oculto" id="yo"></div></div>
+  <p style="font-size:13px;color:var(--suave)">Mapa raster del IGN. El círculo rojo es el punto del informe previo; el azul, dónde estás (si el teléfono lo sabe y estás dentro).</p>`;
+  const pos=await posicion(); const [la0,lo0,la1,lo1]=p.mapa.bbox;
+  if(pos&&pos.lat>la0&&pos.lat<la1&&pos.lon>lo0&&pos.lon<lo1){const y=$('#yo');y.style.left=((pos.lon-lo0)/(lo1-lo0)*100)+'%';y.style.top=((la1-pos.lat)/(la1-la0)*100)+'%';y.classList.remove('oculto');}
+}
+async function diario(sid){
+  const s=S&&S.id===sid?S:await getv('sesiones',sid);
+  dock(!!(S&&!S.fin));
+  const desc=e=>{switch(e.tipo){
+    case 'inicio': return 'Inicio de la salida';
+    case 'fin': return 'Fin de la salida';
+    case 'nota': return `Nota de voz (${e.dur} s)`;
+    case 'texto': return 'Nota escrita: '+esc(e.texto);
+    case 'ayuda': return `Ayuda · ${esc(e.grupo_nombre)} · fotos ${e.fotos.length}/${e.fotos.length+e.fotos_pendientes.length}${e.posibles.length?' · posibles: '+e.posibles.map(esc).join(', '):''}`;
+    default: return esc(e.tipo);}};
+  app.innerHTML=barra('Diario')+s.eventos.slice().reverse().map((e,i)=>`<div class="ev"><b>${hora(e.t)}</b> ${desc(e)}${e.pos?` <span style="color:var(--suave);font-size:13px">· ±${e.pos.prec} m</span>`:''}${e.tipo==='nota'?`<audio controls preload="none" data-a="${esc(e.archivo)}"></audio>`:''}</div>`).join('');
+  app.querySelectorAll('audio[data-a]').forEach(async a=>{const b=await getv('audios',s.id+'/'+a.dataset.a);if(b)a.src=URL.createObjectURL(b);});
+}
+async function verTerminada(sid){
+  dock(false);
+  const s=await getv('sesiones',sid);
+  app.innerHTML=barra(s.titulo)+`<p>${s.inicio.slice(0,16).replace('T',' ')} – ${(s.fin||'').slice(11,16)} · ${s.eventos.length} anotaciones</p>
+  <button class="btn prim" id="exp">Guardar de nuevo el archivo</button><button class="btn" id="dia">Ver el diario</button><button class="btn peligro" id="bor">Borrar esta salida del teléfono</button>`;
+  $('#exp').onclick=()=>exportar(s);
+  $('#dia').onclick=()=>ir(diario,s.id);
+  $('#bor').onclick=async()=>{if(confirmar('¿Borrar la salida y sus notas de voz? Hazlo solo si ya la tienes en el ordenador.')){for(const e of s.eventos)if(e.archivo)await del('audios',s.id+'/'+e.archivo);await del('sesiones',s.id);history.back();}};
+}
+async function terminar(){
+  if(!confirmar('¿Terminar la salida? Se guardará un archivo en Descargas con las notas.')) return;
+  if(rec) await pararGrab();
+  await evento({tipo:'fin'}); S.fin=ahoraISO(); await guardarS(); ls('campo.activa',null);
+  const s=S; await exportar(s); S=null; P=null; pila=[[inicio,[]]]; ir(verTerminada,s.id);
+}
+
+/* ---------- grabación ---------- */
+let rec=null, recIni=0, recChunks=[], recStream=null, recTick=null, analizador=null;
+async function empezarGrab(){
+  if(!S){toast('Empieza antes una salida');return;}
+  try{ recStream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:true}}); }
+  catch(e){ toast('Sin permiso para el micrófono',3500); return; }
+  const tipo=['audio/webm;codecs=opus','audio/ogg;codecs=opus','audio/mp4','audio/webm'].find(t=>window.MediaRecorder&&MediaRecorder.isTypeSupported(t))||'';
+  rec=new MediaRecorder(recStream,tipo?{mimeType:tipo,audioBitsPerSecond:64000}:{}); recChunks=[];
+  rec.ondataavailable=e=>e.data.size&&recChunks.push(e.data);
+  rec.start(1000); recIni=Date.now(); recIniISO=ahoraISO();
+  $('#grab').classList.remove('oculto'); $('#bVoz').classList.add('on');
+  try{const ac=new (window.AudioContext||window.webkitAudioContext)();const src=ac.createMediaStreamSource(recStream);analizador=ac.createAnalyser();analizador.fftSize=512;src.connect(analizador);}catch(e){analizador=null;}
+  const buf=new Uint8Array(512);
+  recTick=setInterval(()=>{const s=Math.floor((Date.now()-recIni)/1000);$('#gT').textContent=Math.floor(s/60)+':'+pad(s%60);
+    if(analizador){analizador.getByteTimeDomainData(buf);let m=0;for(const v of buf)m=Math.max(m,Math.abs(v-128));$('#gN').style.width=Math.min(100,m/1.28)+'%';}},150);
+  if(navigator.vibrate) navigator.vibrate(60);
+}
+let recIniISO='';
+function pararGrab(){return new Promise(ok=>{
+  if(!rec){ok();return;}
+  rec.onstop=async()=>{
+    clearInterval(recTick); recStream.getTracks().forEach(t=>t.stop());
+    const tipo=rec.mimeType||'audio/webm'; const ext=tipo.includes('mp4')?'m4a':tipo.includes('ogg')?'ogg':'webm';
+    const blob=new Blob(recChunks,{type:tipo}); const dur=Math.round((Date.now()-recIni)/1000);
+    S.notas=(S.notas||0)+1; const d=new Date(recIni);
+    const nombre=`nota-${pad(S.notas)}-${pad(d.getHours())}${pad(d.getMinutes())}${pad(d.getSeconds())}.${ext}`;
+    await put('audios',S.id+'/'+nombre,blob);
+    const e={tipo:'nota',archivo:nombre,dur,mime:tipo,inicio:recIniISO}; await evento(e);
+    rec=null; $('#grab').classList.add('oculto'); $('#bVoz').classList.remove('on');
+    if(navigator.vibrate) navigator.vibrate([40,60,40]);
+    toast('Nota guardada ('+dur+' s)'); if(pila.length&&pila[pila.length-1][0]===panel) panel(); ok();
+  };
+  rec.stop();
+});}
+$('#bVoz').onclick=()=>rec?pararGrab():empezarGrab();
+$('#gStop').onclick=()=>pararGrab();
+$('#bAyuda').onclick=()=>{ if(!S){toast('Empieza antes una salida');return;} ir(ayuda); };
+
+/* ---------- exportar (ZIP sin compresión) ---------- */
+const CRC=(()=>{const t=new Uint32Array(256);for(let n=0;n<256;n++){let c=n;for(let k=0;k<8;k++)c=c&1?0xEDB88320^(c>>>1):c>>>1;t[n]=c>>>0;}return t;})();
+function crc32(u){let c=0xFFFFFFFF;for(let i=0;i<u.length;i++)c=CRC[(c^u[i])&255]^(c>>>8);return (c^0xFFFFFFFF)>>>0;}
+async function zip(files){ // [{name, data:Uint8Array}]
+  const enc=new TextEncoder(); const parts=[]; const central=[]; let off=0;
+  const d=new Date(); const dt=((d.getHours()<<11)|(d.getMinutes()<<5)|(d.getSeconds()>>1))&0xFFFF, dd=(((d.getFullYear()-1980)<<9)|((d.getMonth()+1)<<5)|d.getDate())&0xFFFF;
+  for(const f of files){
+    const nm=enc.encode(f.name), c=crc32(f.data), sz=f.data.length;
+    const h=new DataView(new ArrayBuffer(30)); h.setUint32(0,0x04034b50,true);h.setUint16(4,20,true);h.setUint16(6,0x0800,true);h.setUint16(8,0,true);h.setUint16(10,dt,true);h.setUint16(12,dd,true);h.setUint32(14,c,true);h.setUint32(18,sz,true);h.setUint32(22,sz,true);h.setUint16(26,nm.length,true);h.setUint16(28,0,true);
+    parts.push(new Uint8Array(h.buffer),nm,f.data);
+    const k=new DataView(new ArrayBuffer(46)); k.setUint32(0,0x02014b50,true);k.setUint16(4,20,true);k.setUint16(6,20,true);k.setUint16(8,0x0800,true);k.setUint16(10,0,true);k.setUint16(12,dt,true);k.setUint16(14,dd,true);k.setUint32(16,c,true);k.setUint32(20,sz,true);k.setUint32(24,sz,true);k.setUint16(28,nm.length,true);k.setUint32(42,off,true);
+    central.push(new Uint8Array(k.buffer),nm); off+=30+nm.length+sz;
+  }
+  const csz=central.reduce((a,b)=>a+b.length,0);
+  const e=new DataView(new ArrayBuffer(22)); e.setUint32(0,0x06054b50,true);e.setUint16(8,files.length,true);e.setUint16(10,files.length,true);e.setUint32(12,csz,true);e.setUint32(16,off,true);
+  return new Blob([...parts,...central,new Uint8Array(e.buffer)],{type:'application/zip'});
+}
+async function exportar(s){
+  const enc=new TextEncoder(); const files=[];
+  const datos={formato:'campo-sesion-1',version:VERSION,id:s.id,titulo:s.titulo,paquete:s.paquete,inicio:s.inicio,fin:s.fin,eventos:s.eventos};
+  files.push({name:'sesion.json',data:enc.encode(JSON.stringify(datos,null,1))});
+  const lineas=s.eventos.map(e=>`${hora(e.t)}  ${e.tipo}${e.grupo_nombre?' · '+e.grupo_nombre:''}${e.texto?' · '+e.texto:''}${e.archivo?' · '+e.archivo:''}${e.posibles&&e.posibles.length?' · posibles: '+e.posibles.join(', '):''}${e.pos?` · ${e.pos.lat}, ${e.pos.lon} (±${e.pos.prec} m)`:''}`);
+  files.push({name:'diario.txt',data:enc.encode(`${s.titulo}\n${s.inicio} – ${s.fin||''}\n\n`+lineas.join('\n')+'\n')});
+  for(const e of s.eventos) if(e.archivo){const b=await getv('audios',s.id+'/'+e.archivo); if(b) files.push({name:'notas/'+e.archivo,data:new Uint8Array(await b.arrayBuffer())});}
+  const blob=await zip(files);
+  const i=s.inicio; const nombre=`campo-${i.slice(0,10).replace(/-/g,'')}-${i.slice(11,16).replace(':','')}-${(s.paquete||'libre').replace(/[^a-z0-9-]/gi,'')}.zip`;
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=nombre; document.body.appendChild(a); a.click(); setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},4000);
+  s.exportada=nombre; await put('sesiones',s.id,s);
+  toast('Guardado en Descargas: '+nombre,4500);
+}
+
+/* ---------- arranque ---------- */
+if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(()=>{});
+if(navigator.storage&&navigator.storage.persist) navigator.storage.persist().catch(()=>{});
+(async()=>{ pila=[[inicio,[]]]; history.replaceState({n:1},''); const a=ls('campo.activa'); if(a&&await getv('sesiones',a)) abrirSesion(a); else inicio(); })();
+</script>
+</body>
+</html>
