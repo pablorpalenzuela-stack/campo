@@ -47,12 +47,12 @@ button{font:inherit;color:inherit}
 .check.ok .txt{color:var(--suave)}
 .pista{background:var(--ocre);border-radius:10px;padding:10px 12px;margin:10px 0;font-size:15px}
 .esp{display:flex;gap:10px;align-items:flex-start;padding:9px 2px;border-bottom:1px solid var(--linea)}
-.esp img{flex:none;width:64px;height:64px;object-fit:cover;border-radius:8px;background:var(--linea)}
-.esp .sinfoto{flex:none;width:64px;height:64px;border-radius:8px;background:var(--linea)}
+.esp img{flex:none;width:104px;height:104px;object-fit:cover;border-radius:10px;background:var(--linea)}
+.esp .sinfoto{flex:none;width:104px;height:104px;border-radius:10px;background:var(--linea)}
 .esp .n{flex:1;min-width:0}.esp i{color:var(--suave);font-size:14px;display:block}
 .esp .fj{font-size:14px;color:var(--tinta);margin-top:3px;line-height:1.35}
 .zoom{position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:40;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;color:#fff;text-align:center}
-.zoom img{max-width:100%;max-height:70vh;border-radius:10px}.zoom small{opacity:.75;margin-top:8px;font-size:12px}
+.zoom img{width:100%;max-height:72vh;object-fit:contain;border-radius:10px}.zoom small{opacity:.75;margin-top:8px;font-size:12px}
 .esp .c{color:var(--suave);font-size:13px;white-space:nowrap}
 .esp.pos{background:var(--verde2);border-radius:8px;padding-left:8px}
 input[type=search],textarea{width:100%;font:inherit;padding:11px 12px;border-radius:10px;border:1px solid var(--linea);background:var(--carta);color:var(--tinta)}
@@ -87,7 +87,7 @@ textarea{min-height:80px}
 </div></div>
 <script>
 'use strict';
-const VERSION = '1.1.0';
+const VERSION = '1.2.0';
 /* ---------- grupos de ayuda ---------- */
 const GRUPOS = [
  {id:'lenosa', ico:'🌳', nom:'Árbol o arbusto', esp:['lenosa'],
