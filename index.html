@@ -87,7 +87,7 @@ textarea{min-height:80px}
 </div></div>
 <script>
 'use strict';
-const VERSION = '1.4.0';
+const VERSION = '1.4.1';
 /* ---------- grupos de ayuda ---------- */
 const GRUPOS = [
  {id:'lenosa', ico:'🌳', nom:'Árbol o arbusto', esp:['lenosa'],
@@ -467,7 +467,7 @@ async function exportar(s){
 }
 
 /* ---------- arranque ---------- */
-if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(()=>{});
+if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>r.update()).catch(()=>{});
 if(navigator.storage&&navigator.storage.persist) navigator.storage.persist().catch(()=>{});
 (async()=>{ pila=[[inicio,[]]]; history.replaceState({n:1},''); const a=ls('campo.activa'); if(a&&await getv('sesiones',a)) abrirSesion(a); else inicio(); })();
 </script>
