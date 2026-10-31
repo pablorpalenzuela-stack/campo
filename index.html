@@ -87,7 +87,7 @@ textarea{min-height:80px}
 </div></div>
 <script>
 'use strict';
-const VERSION = '1.0.0';
+const VERSION = '1.1.0';
 /* ---------- grupos de ayuda ---------- */
 const GRUPOS = [
  {id:'lenosa', ico:'🌳', nom:'Árbol o arbusto', esp:['lenosa'],
@@ -160,8 +160,11 @@ async function guardarS(){ if(S) await put('sesiones',S.id,S); }
 async function evento(e){ e.t=ahoraISO(); S.eventos.push(e); await guardarS(); const pos=await posicion(); if(pos){e.pos=pos; await guardarS();} return e; }
 
 /* ---------- navegación ---------- */
-function ir(fn,...args){pila.push([fn,args]);fn(...args);window.scrollTo(0,0);history.pushState({n:pila.length},'');}
+function ir(fn,...args){cerrarGrupo();pila.push([fn,args]);fn(...args);window.scrollTo(0,0);history.pushState({n:pila.length},'');}
+let alSalirDeGrupo=null;   // guarda la ayuda si se sale del grupo sin pulsar «Anotar»
+function cerrarGrupo(){ if(alSalirDeGrupo){const f=alSalirDeGrupo;alSalirDeGrupo=null;f();} }
 window.addEventListener('popstate',e=>{
+  cerrarGrupo();
   const n=Math.max(1,(e.state&&e.state.n)||1);
   if(pila.length<=1&&n<=1){ inicioOPanel(); return; }
   while(pila.length>n) pila.pop();
@@ -268,6 +271,15 @@ function grupo(gid){
   dock(true);
   const g=GRUPOS.find(x=>x.id===gid);
   const sel={fotos:new Set(),pruebas:new Set(),posibles:new Set()};
+  let anotado=false;
+  const anotar=async()=>{
+    if(anotado) return; anotado=true;
+    await evento({tipo:'ayuda',grupo:g.id,grupo_nombre:g.nom,fotos:[...sel.fotos].map(i=>g.fotos[i]),pruebas:[...sel.pruebas].map(i=>g.pruebas[i]),
+      fotos_pendientes:g.fotos.filter((_,i)=>!sel.fotos.has(i)),posibles:[...sel.posibles]});
+    toast('Anotado: '+g.nom);
+  };
+  // Al salir por cualquier vía (atrás, otro botón), se anota sola si se marcó algo
+  alSalirDeGrupo=()=>{ if(!anotado&&(sel.fotos.size||sel.pruebas.size||sel.posibles.size)) anotar(); };
   const pinta=()=>{
     const lista=P?g.esp.flatMap(k=>(P.especies[k]||[])):[];
     const q=($('#bq')?.value||'').toLowerCase();
@@ -277,7 +289,7 @@ function grupo(gid){
     <div class="eti">Pruebas sobre el terreno</div>
     ${g.pruebas.map((f,i)=>`<div class="check ${sel.pruebas.has(i)?'ok':''}" data-r="${i}"><div class="caja">${sel.pruebas.has(i)?'✓':''}</div><div class="txt">${esc(f)}</div></div>`).join('')}
     ${g.pista?`<div class="pista">${esc(g.pista)}</div>`:''}
-    <button class="btn prim" id="gok">Anotar y volver</button>
+    <button class="btn prim" id="gok">Anotar y volver</button><p style="font-size:13px;color:var(--suave);margin-top:-2px">Si sales con «atrás», lo marcado se anota igual.</p>
     ${lista.length?`<div class="eti">Esperables aquí (${lista.length}) · toca si te parece</div><input type="search" id="bq" placeholder="Buscar nombre…" value="${esc(q)}">
     ${lista.filter(e=>!q||(e.comun+' '+e.cien).toLowerCase().includes(q)).slice(0,60).map(e=>espHTML(e,sel.posibles.has(e.cien))).join('')}
     <p style="font-size:13px;color:var(--suave)">Cifras: citas en esta época / en todo el año (GBIF). ${esc(P.fuente_especies||'')}</p>`:''}`;
@@ -286,11 +298,7 @@ function grupo(gid){
     app.querySelectorAll('[data-e]').forEach(x=>x.onclick=()=>{const c=x.dataset.e;sel.posibles.has(c)?sel.posibles.delete(c):sel.posibles.add(c);pinta();});
     activarZoom(lista);
     const bq=$('#bq'); if(bq){bq.oninput=()=>{const pos=bq.selectionStart;pinta();const n=$('#bq');n.focus();n.setSelectionRange(pos,pos);};}
-    $('#gok').onclick=async()=>{
-      await evento({tipo:'ayuda',grupo:g.id,grupo_nombre:g.nom,fotos:[...sel.fotos].map(i=>g.fotos[i]),pruebas:[...sel.pruebas].map(i=>g.pruebas[i]),
-        fotos_pendientes:g.fotos.filter((_,i)=>!sel.fotos.has(i)),posibles:[...sel.posibles]});
-      toast('Anotado: '+g.nom); history.go(-2);
-    };
+    $('#gok').onclick=async()=>{ alSalirDeGrupo=null; await anotar(); history.go(-2); };
   };
   pinta();
 }
