@@ -87,7 +87,7 @@ textarea{min-height:80px}
 </div></div>
 <script>
 'use strict';
-const VERSION = '1.2.0';
+const VERSION = '1.3.0';
 /* ---------- grupos de ayuda ---------- */
 const GRUPOS = [
  {id:'lenosa', ico:'🌳', nom:'Árbol o arbusto', esp:['lenosa'],
@@ -188,6 +188,7 @@ async function inicio(){
   ${paqs.length?paqs.map(p=>`<button class="btn" data-p="${esc(p.id)}">${esc(p.titulo)}<small>${esc(p.fecha)} · ${Object.values(p.especies||{}).reduce((a,l)=>a+l.length,0)} especies esperables</small></button>`).join(''):'<p style="color:var(--suave)">Todavía no hay ninguno.</p>'}
   <label class="btn" style="text-align:center">📥 Cargar informe previo (.campo.json)<input type="file" id="fich" accept=".json,application/json" class="oculto"></label>
   <button class="btn" id="libre">Salida sin informe previo</button>
+  <button class="btn" id="como">📖 Cómo se usa</button>
   ${ses.filter(s=>s.fin).length?`<div class="eti">Salidas terminadas</div>`+ses.filter(s=>s.fin).slice(0,8).map(s=>`<button class="btn" data-s="${esc(s.id)}">${esc(s.titulo)}<small>${s.inicio.slice(0,10)} · ${s.eventos.length} anotaciones${s.exportada?' · exportada':''}</small></button>`).join(''):''}
   <p style="color:var(--suave);font-size:13px;margin-top:18px">Versión ${VERSION}. Funciona sin conexión una vez instalada. Las fotos se hacen con la cámara del teléfono; aquí quedan las notas de voz y las ayudas, con su hora, para encajarlas después con las fotos y el track.</p>`;
   if(activa) $('#cont').onclick=()=>abrirSesion(activa.id);
@@ -195,6 +196,26 @@ async function inicio(){
   app.querySelectorAll('[data-s]').forEach(b=>b.onclick=()=>ir(verTerminada,b.dataset.s));
   $('#fich').onchange=cargarFichero;
   $('#libre').onclick=()=>empezar(null);
+  $('#como').onclick=()=>ir(instrucciones);
+}
+function instrucciones(){
+  dock(false);
+  app.innerHTML=barra('Cómo se usa')+`<h2>Una excursión, de principio a fin</h2>
+  <div class="eti">1 · Dónde ir</div>
+  <p>Elegir lugar y fecha entre las opciones de salida (asistente «Dónde ir», por hacer).</p>
+  <div class="eti">2 · Informe previo</div>
+  <p>Claude prepara el informe previo de ese lugar y fecha y su paquete para el móvil, y lo copia por cable a Descargas. Aquí: «Cargar informe previo», leerlo y repasar las especies esperables. No hace falta cobertura.</p>
+  <div class="eti">3 · Salida (con cobertura o sin ella)</div>
+  <p>Empezar la actividad en el fēnix al salir. Si va la Nikon, ponerla en hora con el reloj. En Campo, «Empezar la salida».</p>
+  <p>Fotos con la cámara normal del teléfono (o con la Nikon). <b>Después de cada foto o serie de fotos, una nota de voz</b>: cierra el grupo y dice qué es («quejigo junto al arroyo»; basta «fin»). Si sigue el mismo ejemplar, empezar la nota con «lo mismo» o «sigue el…». Las fotos hechas mientras se graba cuentan para esa nota.</p>
+  <p><b>Ayuda</b> cuando haga falta: fotos mínimas, pruebas sobre el terreno y especies esperables del grupo. Lo marcado se anota solo al salir.</p>
+  <p>Aves: Merlin, y guardar en eBird lo que identifique.</p>
+  <p>Al acabar: «Terminar la salida y guardar» (deja un ZIP en Descargas) y parar la actividad del fēnix.</p>
+  <div class="eti">4 · Gabinete</div>
+  <p>Conectar al ordenador el Samsung (modo «Transferir archivos») y el fēnix, y pasar a Claude el enlace de la lista de eBird. Las fotos de la Nikon, a la carpeta Identificar. Claude recoge las fotos, el track, el ZIP de Campo y Merlin, lo encaja todo por la hora y plantea las dudas; se resuelven con guías, internet y muestras (lupa, microscopio).</p>
+  <div class="eti">5 · Informe final</div>
+  <p>Claude hace la ficha de excursión en PDF, la guarda en «Informes finales» y la anota en el proyecto.</p>
+  <div class="aviso">Cerrar la aplicación no termina la salida: sigue abierta hasta pulsar «Terminar».</div>`;
 }
 async function cargarFichero(ev){
   const f=ev.target.files[0]; if(!f) return;
