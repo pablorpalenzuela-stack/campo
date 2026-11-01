@@ -70,6 +70,13 @@ textarea{min-height:80px}
 .grab .t{font:500 44px "EB Garamond",Georgia,serif;font-variant-numeric:tabular-nums}
 .grab .nivel{height:10px;border-radius:5px;background:var(--linea);overflow:hidden;margin:12px 0}
 .grab .nivel i{display:block;height:100%;width:0;background:var(--rojo)}
+.zoom{overflow-y:auto;justify-content:flex-start;background:rgba(10,12,10,.97)}.zoom .rg{width:100%;margin-top:16px;text-align:left}.zoom .rg img{max-height:52vh}.zoom .rg p{color:#fff;font-size:15px;margin:6px 0 0}
+.conf{font-size:14px;color:var(--rojo);margin-top:3px;line-height:1.35}
+.cand{padding:10px 4px;border-bottom:1px solid var(--linea)}.cand.on{background:var(--verde2);border-radius:8px}
+.cand .cab{display:flex;gap:10px;align-items:center}.cand img{width:64px;height:64px;object-fit:cover;border-radius:8px;flex:none}
+.cand .pc{margin-left:auto;font-size:13px;color:var(--suave);white-space:nowrap}.cand .det{font-size:14px;margin-top:4px;line-height:1.4}
+.ok-esp{font-size:12px;color:var(--verde);font-weight:700}
+.btn[disabled]{opacity:.5}
 .toast{position:fixed;left:16px;right:16px;bottom:100px;background:#1d241f;color:#fff;border-radius:10px;padding:12px 14px;z-index:30;font-size:15px}
 </style>
 </head>
@@ -87,7 +94,7 @@ textarea{min-height:80px}
 </div></div>
 <script>
 'use strict';
-const VERSION = '1.4.1';
+const VERSION = '1.5.0';
 /* ---------- grupos de ayuda ---------- */
 const GRUPOS = [
  {id:'lenosa', ico:'🌳', nom:'Árbol o arbusto', esp:['lenosa'],
@@ -131,11 +138,25 @@ const GRUPOS = [
   pruebas:['Frasco con agua del sitio, sin llenar del todo','Otro con fondo o plantas','Etiquetar: lugar y hora','¿Corriente o quieta? ¿Fría?'],
   pista:'Las muestras, a la sombra y a casa el mismo día.'},
 ];
+/* ---------- modos de uso ---------- */
+const MODOS = {
+ general:{nom:'General', grupos:null, esp:null, aviso:''},
+ botanica:{nom:'Solo botánica', grupos:['lenosa','herbacea','cripto','seta'], esp:['lenosa','herbacea','hongo'],
+  aviso:'Modo botánica: la ayuda y las esperables muestran solo plantas y hongos. Cada ejemplar, con foto general al principio y al final.'},
+ aves:{nom:'Solo aves', grupos:['ave'], esp:['ave'],
+  aviso:'Modo aves: Merlin escuchando y, al acabar, la lista a eBird. Ayuda abre directamente las aves. Una nota de voz para lo que oyes y no ves.'},
+};
+let MODO = (()=>{try{const m=localStorage.getItem('campo.modo');return MODOS[m]?m:'general';}catch(e){return 'general';}})();
+const gruposModo=()=>MODOS[MODO].grupos?GRUPOS.filter(g=>MODOS[MODO].grupos.includes(g.id)):GRUPOS;
+function modoHTML(){return `<div class="eti">Modo</div><div class="pest">${Object.entries(MODOS).map(([k,m])=>`<button class="${k===MODO?'on':''}" data-modo="${k}">${m.nom}</button>`).join('')}</div>`;}
+function activarModo(repinta){app.querySelectorAll('[data-modo]').forEach(b=>b.onclick=async()=>{
+  if(b.dataset.modo===MODO) return; MODO=b.dataset.modo; ls('campo.modo',MODO);
+  if(S&&!S.fin){S.modo=MODO;await evento({tipo:'modo',modo:MODO});} toast('Modo: '+MODOS[MODO].nom); repinta();});}
 const NOMBRE_ESP = {lenosa:'Árboles y arbustos',herbacea:'Matas y hierbas',ave:'Aves',mamifero:'Mamíferos',insecto:'Insectos',aracnido:'Arácnidos',reptil:'Reptiles',anfibio:'Anfibios',hongo:'Hongos y líquenes'};
 
 /* ---------- almacenamiento (IndexedDB) ---------- */
 let dbp;
-function db(){ if(!dbp) dbp=new Promise((ok,ko)=>{const r=indexedDB.open('campo',1);r.onupgradeneeded=()=>{const d=r.result;['paquetes','sesiones','audios'].forEach(s=>d.objectStoreNames.contains(s)||d.createObjectStore(s));};r.onsuccess=()=>ok(r.result);r.onerror=()=>ko(r.error);}); return dbp;}
+function db(){ if(!dbp) dbp=new Promise((ok,ko)=>{const r=indexedDB.open('campo',2);r.onupgradeneeded=()=>{const d=r.result;['paquetes','sesiones','audios','pendientes'].forEach(s=>d.objectStoreNames.contains(s)||d.createObjectStore(s));};r.onsuccess=()=>ok(r.result);r.onerror=()=>ko(r.error);}); return dbp;}
 async function put(st,k,v){const d=await db();return new Promise((ok,ko)=>{const t=d.transaction(st,'readwrite');t.objectStore(st).put(v,k);t.oncomplete=()=>ok();t.onerror=()=>ko(t.error);});}
 async function getv(st,k){const d=await db();return new Promise((ok,ko)=>{const r=d.transaction(st).objectStore(st).get(k);r.onsuccess=()=>ok(r.result);r.onerror=()=>ko(r.error);});}
 async function del(st,k){const d=await db();return new Promise(ok=>{const t=d.transaction(st,'readwrite');t.objectStore(st).delete(k);t.oncomplete=()=>ok();});}
@@ -183,6 +204,7 @@ async function inicio(){
   const ses=(await todos('sesiones')).map(x=>x[1]).sort((a,b)=>b.inicio.localeCompare(a.inicio));
   const activa=ses.find(s=>!s.fin);
   app.innerHTML=`<div class="eti">Asistente del naturalista</div><h1>Campo</h1>
+  ${modoHTML()}
   ${activa?`<button class="btn prim" id="cont">Seguir con la salida<small>${esc(activa.titulo)} · desde las ${hora(activa.inicio).slice(0,5)}</small></button>`:''}
   <div class="eti">Informes previos en el teléfono</div>
   ${paqs.length?paqs.map(p=>`<button class="btn" data-p="${esc(p.id)}">${esc(p.titulo)}<small>${esc(p.fecha)} · ${Object.values(p.especies||{}).reduce((a,l)=>a+l.length,0)} especies esperables</small></button>`).join(''):'<p style="color:var(--suave)">Todavía no hay ninguno.</p>'}
@@ -190,6 +212,7 @@ async function inicio(){
   <label class="btn" style="text-align:center">📥 Cargar desde un archivo (.campo.json)<input type="file" id="fich" accept=".json,application/json" class="oculto"></label>
   <button class="btn" id="libre">Salida sin informe previo</button>
   <button class="btn" id="como">📖 Cómo se usa</button>
+  <button class="btn" id="ajus">⚙ Ajustes<small>Claves de Pl@ntNet y de Claude para los candidatos con cobertura</small></button>
   ${ses.filter(s=>s.fin).length?`<div class="eti">Salidas terminadas</div>`+ses.filter(s=>s.fin).slice(0,8).map(s=>`<button class="btn" data-s="${esc(s.id)}">${esc(s.titulo)}<small>${s.inicio.slice(0,10)} · ${s.eventos.length} anotaciones${s.exportada?' · exportada':''}</small></button>`).join(''):''}
   <p style="color:var(--suave);font-size:13px;margin-top:18px">Versión ${VERSION}. Funciona sin conexión una vez instalada. Las fotos se hacen con la cámara del teléfono; aquí quedan las notas de voz y las ayudas, con su hora, para encajarlas después con las fotos y el track.</p>`;
   if(activa) $('#cont').onclick=()=>abrirSesion(activa.id);
@@ -199,6 +222,8 @@ async function inicio(){
   $('#libre').onclick=()=>empezar(null);
   $('#como').onclick=()=>ir(instrucciones);
   $('#desc').onclick=()=>ir(descargas);
+  $('#ajus').onclick=()=>ir(ajustes);
+  activarModo(inicio);
 }
 async function descargas(){
   dock(false);
@@ -230,6 +255,9 @@ function instrucciones(){
   <p>Fotos con la cámara normal del teléfono (o con la Nikon). <b>Después de cada foto o serie de fotos, una nota de voz</b>: cierra el grupo y dice qué es («quejigo junto al arroyo»; basta «fin»). Si sigue el mismo ejemplar, empezar la nota con «lo mismo» o «sigue el…». Las fotos hechas mientras se graba cuentan para esa nota.</p>
   <p><b>Ayuda</b> cuando haga falta: fotos mínimas, pruebas sobre el terreno y especies esperables del grupo. Lo marcado se anota solo al salir.</p>
   <p>Aves: Merlin, y guardar en eBird lo que identifique.</p>
+  <p><b>Modo</b>: general, solo botánica o solo aves. Cambia lo que muestran la ayuda y las esperables; se elige en la pantalla de inicio o en el panel, y queda anotado en el diario.</p>
+  <p><b>Candidatos con una foto</b>, si hay cobertura: elegir en la galería la foto que se acaba de hacer y pedir candidatos (Pl@ntNet para plantas y Claude para todo). La respuesta queda en el diario con el nombre de la foto, para el gabinete. Sin cobertura, la consulta espera en el panel hasta que la haya. Las claves se ponen una vez en Ajustes.</p>
+  <p>En las esperables, «⚠ Se confunde con…» señala las parejas difíciles; al tocar la foto aparece la del rasgo que las separa.</p>
   <p>Al acabar: «Terminar la salida y guardar» (deja un ZIP en Descargas) y parar la actividad del fēnix.</p>
   <div class="eti">4 · Gabinete</div>
   <p>Conectar al ordenador el Samsung (modo «Transferir archivos») y el fēnix, y pasar a Claude el enlace de la lista de eBird. Las fotos de la Nikon, a la carpeta Identificar. Claude recoge las fotos, el track, el ZIP de Campo y Merlin, lo encaja todo por la hora y plantea las dudas; se resuelven con guías, internet y muestras (lupa, microscopio).</p>
@@ -261,24 +289,36 @@ async function verPaquete(id){
 }
 function confirmar(t){return window.confirm(t);}
 function espHTML(e,pos){
-  return `<div class="esp ${pos?'pos':''}" data-e="${esc(e.cien)}">${e.foto?`<img src="${e.foto}" alt="" data-z="${esc(e.cien)}">`:'<div class="sinfoto"></div>'}
-  <div class="n">${esc(e.comun||e.cien)}${e.comun?`<i>${esc(e.cien)}</i>`:''}${e.fijarse?`<div class="fj">👁 ${esc(e.fijarse)}</div>`:''}</div><div class="c">${e.citas_epoca} / ${e.citas}</div></div>`;
+  const rg=e.rasgos&&e.rasgos.length;
+  return `<div class="esp ${pos?'pos':''}" data-e="${esc(e.cien)}">${e.foto?`<img src="${e.foto}" alt="" data-z="${esc(e.cien)}">`:(rg?`<img src="${e.rasgos[0].foto}" alt="" data-z="${esc(e.cien)}">`:'<div class="sinfoto"></div>')}
+  <div class="n">${esc(e.comun||e.cien)}${e.comun?`<i>${esc(e.cien)}</i>`:''}${e.fijarse?`<div class="fj">👁 ${esc(e.fijarse)}</div>`:''}${confHTML(e)}</div><div class="c">${e.citas_epoca} / ${e.citas}</div></div>`;
+}
+function confHTML(e){
+  if(!e.confunde||!e.confunde.length) return '';
+  return `<div class="conf">⚠ Se confunde con ${e.confunde.map(c=>esc(c.comun||c.cien)).join(', ')}${e.rasgos&&e.rasgos.length?' · 🔍 toca la foto':''}</div>`;
+}
+function zoomEsp(e){
+  const z=document.createElement('div');z.className='zoom';
+  z.innerHTML=`${e.foto?`<img src="${e.foto}" alt="">`:''}<div style="margin-top:10px"><b>${esc(e.comun||e.cien)}</b> <i>${esc(e.cien)}</i></div>${e.fijarse?`<div style="margin-top:6px">${esc(e.fijarse)}</div>`:''}${e.foto?`<small>Foto: iNaturalist, ${esc(e.foto_autor||'')}</small>`:''}
+  ${(e.rasgos||[]).map(r=>`<div class="rg"><div class="eti" style="color:#ddd">El rasgo que lo separa${e.confunde&&e.confunde.length?' de '+e.confunde.map(c=>esc(c.comun||c.cien)).join(', '):''}</div><img src="${r.foto}" alt=""><p>${esc(r.pie)}</p><small>${esc(r.autor)}</small></div>`).join('')}`;
+  z.onclick=()=>z.remove();document.body.appendChild(z);
 }
 function activarZoom(lista){
-  app.querySelectorAll('[data-z]').forEach(im=>im.onclick=ev=>{ev.stopPropagation();const e=lista.find(x=>x.cien===im.dataset.z);if(!e)return;
-    const z=document.createElement('div');z.className='zoom';z.innerHTML=`<img src="${e.foto}" alt=""><div style="margin-top:10px"><b>${esc(e.comun||e.cien)}</b> <i>${esc(e.cien)}</i></div>${e.fijarse?`<div style="margin-top:6px">${esc(e.fijarse)}</div>`:''}<small>Foto: iNaturalist, ${esc(e.foto_autor||'')}</small>`;
-    z.onclick=()=>z.remove();document.body.appendChild(z);});
+  app.querySelectorAll('[data-z]').forEach(im=>im.onclick=ev=>{ev.stopPropagation();const e=lista.find(x=>x.cien===im.dataset.z);if(e)zoomEsp(e);});
 }
+function buscarEsp(p,cien){ if(!p||!cien) return null; const c=cien.split(' ').slice(0,2).join(' ').toLowerCase();
+  for(const l of Object.values(p.especies||{})) for(const e of l) if(e.cien.toLowerCase()===c) return e; return null; }
 function seccionesHTML(p){return (p.secciones||[]).map(s=>`<div class="eti">${esc(s.titulo)}</div>${s.html}`).join('');}
 async function empezar(p){
   const d=new Date();
-  S={id:'s'+d.getTime(),paquete:p?p.id:null,titulo:p?p.titulo:'Salida libre '+d.toLocaleDateString('es-ES'),inicio:ahoraISO(),fin:null,eventos:[],notas:0,version:VERSION};
+  S={id:'s'+d.getTime(),paquete:p?p.id:null,titulo:p?p.titulo:'Salida libre '+d.toLocaleDateString('es-ES'),inicio:ahoraISO(),fin:null,eventos:[],notas:0,version:VERSION,modo:MODO};
   await guardarS(); ls('campo.activa',S.id);
-  await evento({tipo:'inicio'});
+  await evento({tipo:'inicio',modo:MODO});
   pila=[[inicio,[]]]; abrirSesion(S.id);
 }
 async function abrirSesion(id){
   S=await getv('sesiones',id); P=S.paquete?await getv('paquetes',S.paquete):null;
+  if(S.modo&&MODOS[S.modo]){MODO=S.modo;ls('campo.modo',MODO);}
   pila=[[inicio,[]]]; ir(panel);
 }
 function panel(){
@@ -286,10 +326,18 @@ function panel(){
   const ay=S.eventos.filter(e=>e.tipo==='ayuda').length, no=S.eventos.filter(e=>e.tipo==='nota').length;
   app.innerHTML=barra(S.titulo)+`
   <div class="cifras"><div><b>${no}</b>notas de voz</div><div><b>${ay}</b>ayudas</div><div><b>${hora(S.inicio).slice(0,5)}</b>inicio</div></div>
-  <div class="aviso">Haz las fotos con la cámara normal. Pulsa <b>Nota de voz</b> para contar lo que la foto no recoge, y <b>Ayuda</b> para ver qué fotos y pruebas pide cada grupo.</div>
+  <div class="aviso">${MODOS[MODO].aviso?esc(MODOS[MODO].aviso):'Haz las fotos con la cámara normal. Pulsa <b>Nota de voz</b> para contar lo que la foto no recoge, y <b>Ayuda</b> para ver qué fotos y pruebas pide cada grupo.'}</div>
+  <button class="btn prim" id="cand">📷 Candidatos con una foto<small>Necesita cobertura; si no la hay, queda pendiente</small></button>
+  <button class="btn oculto" id="pend"></button>
   <div class="fila">${P?'<button class="btn mini" id="vinf">Informe</button><button class="btn mini" id="vesp">Esperables</button>':''}${P&&P.mapa?'<button class="btn mini" id="vmap">Mapa</button>':''}<button class="btn mini" id="vdia">Diario</button></div>
   <button class="btn" id="txt">✎ Nota escrita</button>
+  ${modoHTML()}
   <button class="btn peligro" id="fin" style="margin-top:22px">Terminar la salida y guardar</button>`;
+  activarModo(panel);
+  $('#cand').onclick=()=>ir(identificar,gruposModo().length===1?gruposModo()[0].id:null);
+  pendientesDe(S.id).then(l=>{const b=$('#pend');if(!b||!l.length)return;b.classList.remove('oculto');
+    b.innerHTML=`⏳ ${l.length} consulta${l.length>1?'s':''} pendiente${l.length>1?'s':''}<small>${navigator.onLine?'Tocar para hacerlas ahora':'Sin conexión; tocar cuando la haya'}</small>`;
+    b.onclick=()=>resolverPendientes();});
   if(P){$('#vinf').onclick=()=>ir(verInforme);$('#vesp').onclick=()=>ir(esperables,P.id,null,null);}
   if(P&&P.mapa) $('#vmap').onclick=()=>ir(verMapa,P.id);
   $('#vdia').onclick=()=>ir(diario,S.id);
@@ -305,10 +353,10 @@ function notaEscrita(){
 }
 function ayuda(){
   dock(true);
-  app.innerHTML=barra('Ayuda: ¿qué es?')+`<div class="grid">${GRUPOS.map(g=>`<button data-g="${g.id}"><span>${g.ico}</span>${esc(g.nom)}</button>`).join('')}</div>`;
+  app.innerHTML=barra('Ayuda: ¿qué es?')+`<div class="grid">${gruposModo().map(g=>`<button data-g="${g.id}"><span>${g.ico}</span>${esc(g.nom)}</button>`).join('')}</div>`;
   app.querySelectorAll('[data-g]').forEach(b=>b.onclick=()=>ir(grupo,b.dataset.g));
 }
-function grupo(gid){
+function grupo(gid,directo){
   dock(true);
   const g=GRUPOS.find(x=>x.id===gid);
   const sel={fotos:new Set(),pruebas:new Set(),posibles:new Set()};
@@ -331,6 +379,7 @@ function grupo(gid){
     ${g.pruebas.map((f,i)=>`<div class="check ${sel.pruebas.has(i)?'ok':''}" data-r="${i}"><div class="caja">${sel.pruebas.has(i)?'✓':''}</div><div class="txt">${esc(f)}</div></div>`).join('')}
     ${g.pista?`<div class="pista">${esc(g.pista)}</div>`:''}
     <button class="btn prim" id="gok">Anotar y volver</button><p style="font-size:13px;color:var(--suave);margin-top:-2px">Si sales con «atrás», lo marcado se anota igual.</p>
+    <button class="btn" id="gcand">📷 Candidatos con una foto<small>Con cobertura: ${PLANTNET_GRUPOS.includes(g.id)?'Pl@ntNet y Claude':'Claude'}</small></button>
     ${lista.length?`<div class="eti">Esperables aquí (${lista.length}) · toca si te parece</div><input type="search" id="bq" placeholder="Buscar nombre…" value="${esc(q)}">
     ${lista.filter(e=>!q||(e.comun+' '+e.cien).toLowerCase().includes(q)).slice(0,60).map(e=>espHTML(e,sel.posibles.has(e.cien))).join('')}
     <p style="font-size:13px;color:var(--suave)">Cifras: citas en esta época / en todo el año (GBIF). ${esc(P.fuente_especies||'')}</p>`:''}`;
@@ -339,14 +388,15 @@ function grupo(gid){
     app.querySelectorAll('[data-e]').forEach(x=>x.onclick=()=>{const c=x.dataset.e;sel.posibles.has(c)?sel.posibles.delete(c):sel.posibles.add(c);pinta();});
     activarZoom(lista);
     const bq=$('#bq'); if(bq){bq.oninput=()=>{const pos=bq.selectionStart;pinta();const n=$('#bq');n.focus();n.setSelectionRange(pos,pos);};}
-    $('#gok').onclick=async()=>{ alSalirDeGrupo=null; await anotar(); history.go(-2); };
+    $('#gok').onclick=async()=>{ alSalirDeGrupo=null; await anotar(); history.go(directo?-1:-2); };
+    $('#gcand').onclick=()=>ir(identificar,g.id);
   };
   pinta();
 }
 async function esperables(pid,clave,q){
   dock(!!S);
   const p=P&&P.id===pid?P:await getv('paquetes',pid);
-  const claves=Object.keys(p.especies||{}).filter(k=>(p.especies[k]||[]).length);
+  const claves=Object.keys(p.especies||{}).filter(k=>(p.especies[k]||[]).length&&(!MODOS[MODO].esp||MODOS[MODO].esp.includes(k)));
   clave=clave||claves[0];
   const pinta=()=>{
     const lista=p.especies[clave]||[]; const qq=(q||'').toLowerCase();
@@ -377,8 +427,11 @@ async function diario(sid){
     case 'nota': return `Nota de voz (${e.dur} s)`;
     case 'texto': return 'Nota escrita: '+esc(e.texto);
     case 'ayuda': return `Ayuda · ${esc(e.grupo_nombre)} · fotos ${e.fotos.length}/${e.fotos.length+e.fotos_pendientes.length}${e.posibles.length?' · posibles: '+e.posibles.map(esc).join(', '):''}`;
+    case 'candidatos': return `<a href="#" data-cc="${esc(e.consulta)}">Candidatos · ${esc(e.grupo_nombre)}</a> · ${esc(resumenCand(e))}`;
+    case 'modo': return 'Modo: '+esc((MODOS[e.modo]||{}).nom||e.modo);
     default: return esc(e.tipo);}};
   app.innerHTML=barra('Diario')+s.eventos.slice().reverse().map((e,i)=>`<div class="ev"><b>${hora(e.t)}</b> ${desc(e)}${e.pos?` <span style="color:var(--suave);font-size:13px">· ±${e.pos.prec} m</span>`:''}${e.tipo==='nota'?`<audio controls preload="none" data-a="${esc(e.archivo)}"></audio>`:''}</div>`).join('');
+  app.querySelectorAll('[data-cc]').forEach(a=>a.onclick=ev=>{ev.preventDefault();ir(resultados,s.id,a.dataset.cc);});
   app.querySelectorAll('audio[data-a]').forEach(async a=>{const b=await getv('audios',s.id+'/'+a.dataset.a);if(b)a.src=URL.createObjectURL(b);});
 }
 async function verTerminada(sid){
@@ -395,6 +448,173 @@ async function terminar(){
   if(rec) await pararGrab();
   await evento({tipo:'fin'}); S.fin=ahoraISO(); await guardarS(); ls('campo.activa',null);
   const s=S; await exportar(s); S=null; P=null; pila=[[inicio,[]]]; ir(verTerminada,s.id);
+}
+
+/* ---------- candidatos en el sitio (versión 2) ---------- */
+const PLANTNET_GRUPOS=['lenosa','herbacea','cripto'];
+const ORGANOS=[['auto','No sé'],['leaf','Hoja'],['flower','Flor'],['fruit','Fruto'],['bark','Corteza'],['habit','Porte']];
+const MODELO_DEF='claude-sonnet-5-5';
+const cfg=k=>ls('campo.'+k)||'';
+async function reducir(file,lado=1280){
+  const bmp=await createImageBitmap(file);
+  const r=Math.min(1,lado/Math.max(bmp.width,bmp.height));
+  const c=document.createElement('canvas');c.width=Math.round(bmp.width*r);c.height=Math.round(bmp.height*r);
+  c.getContext('2d').drawImage(bmp,0,0,c.width,c.height);
+  return await new Promise(ok=>c.toBlob(ok,'image/jpeg',0.85));
+}
+const b64=blob=>new Promise(ok=>{const fr=new FileReader();fr.onload=()=>ok(String(fr.result).split(',')[1]);fr.readAsDataURL(blob);});
+const isoDe=ms=>{const d=new Date(ms),o=-d.getTimezoneOffset();return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())+'T'+hora(d)+(o>=0?'+':'-')+pad(Math.floor(Math.abs(o)/60))+':'+pad(Math.abs(o)%60);};
+
+function ajustes(){
+  dock(false);
+  const cp=cfg('claude_plantas')!=='no';
+  app.innerHTML=barra('Ajustes')+`<p>Las claves se guardan solo en este teléfono.</p>
+  <div class="eti">Clave de Pl@ntNet</div><input type="search" id="kpn" value="${esc(cfg('plantnet'))}" autocomplete="off" spellcheck="false">
+  <p style="font-size:13px;color:var(--suave)">La de my.plantnet.org. Allí, en la configuración de la clave, hay que autorizar el dominio <b>pablorpalenzuela-stack.github.io</b>; si no, Pl@ntNet rechaza la consulta.</p>
+  <div class="eti">Clave de la API de Claude (Anthropic)</div><input type="search" id="kan" value="${esc(cfg('anthropic'))}" autocomplete="off" spellcheck="false">
+  <p style="font-size:13px;color:var(--suave)">De console.anthropic.com. Cada consulta con fotos cuesta unos céntimos.</p>
+  <div class="eti">Modelo de Claude</div><input type="search" id="kmo" value="${esc(cfg('modelo')||MODELO_DEF)}" spellcheck="false">
+  <div class="check ${cp?'ok':''}" id="kcp"><div class="caja">${cp?'✓':''}</div><div class="txt">En plantas, pedir también a Claude una segunda opinión</div></div>
+  <button class="btn prim" id="kok">Guardar</button>`;
+  $('#kcp').onclick=()=>{const on=$('#kcp').classList.toggle('ok');$('#kcp .caja').textContent=on?'✓':'';};
+  $('#kok').onclick=()=>{ls('campo.plantnet',$('#kpn').value.trim()||null);ls('campo.anthropic',$('#kan').value.trim()||null);
+    ls('campo.modelo',($('#kmo').value.trim()&&$('#kmo').value.trim()!==MODELO_DEF)?$('#kmo').value.trim():null);
+    ls('campo.claude_plantas',$('#kcp').classList.contains('ok')?null:'no');toast('Guardado');history.back();};
+}
+
+function identificar(gid){
+  dock(true);
+  let g=gid, organo='auto', nota='';
+  const fotos=[];
+  const pinta=()=>{
+    const gs=gruposModo(); const pn=PLANTNET_GRUPOS.includes(g);
+    const usa=!g?'':(pn?('Pl@ntNet'+(cfg('claude_plantas')!=='no'?' y Claude':'')):'Claude');
+    const faltan=[]; if(pn&&!cfg('plantnet'))faltan.push('Pl@ntNet'); if((!pn||cfg('claude_plantas')!=='no')&&g&&!cfg('anthropic'))faltan.push('Claude');
+    app.innerHTML=barra('Candidatos con una foto')+`
+    <div class="eti">¿Qué es?</div><div class="pest" style="flex-wrap:wrap">${gs.map(x=>`<button class="${x.id===g?'on':''}" data-gg="${x.id}">${x.ico} ${esc(x.nom)}</button>`).join('')}</div>
+    <div class="eti">Fotos (de una a cuatro; mejor las de detalle)</div>
+    <label class="btn" style="text-align:center">🖼 Elegir fotos de la galería<input type="file" id="ff" accept="image/*" multiple class="oculto"></label>
+    ${fotos.length?`<div class="fila">${fotos.map((f,i)=>`<img src="${f.url}" data-q="${i}" alt="" style="width:100%;height:84px;object-fit:cover;border-radius:8px">`).join('')}</div><p style="font-size:13px;color:var(--suave)">Toca una foto para quitarla.</p>`:''}
+    ${pn?`<div class="eti">¿Qué parte se ve? (para Pl@ntNet)</div><div class="pest" style="flex-wrap:wrap">${ORGANOS.map(([k,n])=>`<button class="${k===organo?'on':''}" data-o="${k}">${n}</button>`).join('')}</div>`:''}
+    <div class="eti">Lo que la foto no recoge (opcional)</div><textarea id="nt" placeholder="Tamaño, olor, sonido, dónde estaba, qué hacía…">${esc(nota)}</textarea>
+    ${faltan.length?`<div class="aviso">Falta la clave de ${faltan.join(' y ')} en <a href="#" id="aj">Ajustes</a>.</div>`:''}
+    <button class="btn prim" id="go" ${fotos.length&&g?'':'disabled'}>Buscar candidatos${usa?'<small>'+usa+'</small>':''}</button>
+    <p style="font-size:13px;color:var(--suave)">${navigator.onLine?'Con conexión.':'Sin conexión: la consulta quedará pendiente en el panel.'} La respuesta se anota en el diario con el nombre y la hora de las fotos.</p>`;
+    app.querySelectorAll('[data-gg]').forEach(b=>b.onclick=()=>{g=b.dataset.gg;pinta();});
+    app.querySelectorAll('[data-o]').forEach(b=>b.onclick=()=>{organo=b.dataset.o;pinta();});
+    app.querySelectorAll('[data-q]').forEach(b=>b.onclick=()=>{fotos.splice(+b.dataset.q,1);pinta();});
+    $('#nt').oninput=e=>nota=e.target.value;
+    const aj=$('#aj'); if(aj) aj.onclick=e=>{e.preventDefault();ir(ajustes);};
+    $('#ff').onchange=async ev=>{
+      for(const f of [...ev.target.files].slice(0,4-fotos.length)){
+        try{const blob=await reducir(f);fotos.push({blob,url:URL.createObjectURL(blob),nombre:f.name,mod:isoDe(f.lastModified)});}catch(e){toast('No se pudo leer '+f.name);}
+      }
+      pinta();
+    };
+    $('#go').onclick=async()=>{
+      if(!fotos.length||!g) return;
+      const c={id:'c'+Date.now(),sesion:S.id,t:ahoraISO(),grupo:g,organo:PLANTNET_GRUPOS.includes(g)?organo:null,nota:nota.trim(),
+        fotos:fotos.map(f=>({blob:f.blob,nombre:f.nombre,mod:f.mod}))};
+      c.pos=await posicion();
+      if(!navigator.onLine){await put('pendientes',c.id,c);toast('Sin conexión: queda pendiente',3500);history.back();return;}
+      app.innerHTML=barra('Candidatos con una foto')+'<p style="color:var(--suave)">Consultando… (unos segundos)</p>';
+      const res=await consultar(c);
+      if(res.sinRed){await put('pendientes',c.id,c);toast('No hay red: queda pendiente',3500);history.back();return;}
+      const ev=await anotarCandidatos(c,res);
+      history.replaceState({n:pila.length},''); pila[pila.length-1]=[resultados,[S.id,c.id]]; resultados(S.id,c.id);
+    };
+  };
+  pinta();
+}
+
+async function pedirPlantNet(c){
+  const k=cfg('plantnet'); if(!k) throw new Error('falta la clave de Pl@ntNet (Ajustes)');
+  const fd=new FormData(); c.fotos.forEach((f,i)=>{fd.append('images',f.blob,'foto'+i+'.jpg');fd.append('organs',c.organo||'auto');});
+  const r=await fetch('https://my-api.plantnet.org/v2/identify/all?'+new URLSearchParams({'api-key':k,lang:'es','nb-results':'6'}),{method:'POST',body:fd});
+  const d=await r.json().catch(()=>({}));
+  if(r.status===404) return [];
+  if(!r.ok) throw new Error('Pl@ntNet '+r.status+(d.message?': '+d.message:''));
+  return (d.results||[]).map(x=>({cien:x.species.scientificNameWithoutAuthor,comun:(x.species.commonNames||[])[0]||'',score:Math.round(x.score*100)}));
+}
+async function pedirClaude(c,pn,pq){
+  const k=cfg('anthropic'); if(!k) throw new Error('falta la clave de Claude (Ajustes)');
+  const gr=GRUPOS.find(x=>x.id===c.grupo);
+  const esp=pq?gr.esp.flatMap(e=>pq.especies[e]||[]).slice(0,150).map(e=>(e.comun?e.comun+' ':'')+'('+e.cien+')').join('; '):'';
+  const texto=`Soy naturalista aficionado y estoy en el campo, en España. Te mando ${c.fotos.length} foto(s) de algo que me parece: ${gr.nom}.
+Fecha y hora: ${c.t}. Lugar: ${pq?pq.titulo:'sin informe previo'}${c.pos?` (${c.pos.lat}, ${c.pos.lon})`:''}.
+${c.nota?'Lo que veo y la foto no recoge: '+c.nota+'\n':''}${esp?'Especies citadas cerca en GBIF, de más a menos frecuentes: '+esp+'\n':''}${pn&&pn.length?'Pl@ntNet propone: '+pn.map(x=>x.cien+' '+x.score+' %').join(', ')+'\n':''}
+Dame hasta cinco candidatos, del más al menos probable. Prefiere las especies de la lista si encajan con lo que se ve, pero no te limites a ella. Si la foto no permite pasar de género o de familia, dilo así. Sé honesto con la confianza. Escribe en español de España. Responde solo con este JSON, sin nada más:
+{"candidatos":[{"cien":"nombre científico","comun":"nombre común en España","confianza":"alta|media|baja","por_que":"el rasgo visible que lo apoya, en una frase","comprobar":"qué mirar ahora en el sitio para confirmarlo o descartarlo"}],"falta":"la foto o la prueba que más ayudaría, en una frase"}`;
+  const content=[]; for(const f of c.fotos) content.push({type:'image',source:{type:'base64',media_type:'image/jpeg',data:await b64(f.blob)}});
+  content.push({type:'text',text:texto});
+  const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',
+    headers:{'content-type':'application/json','x-api-key':k,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+    body:JSON.stringify({model:cfg('modelo')||MODELO_DEF,max_tokens:1500,messages:[{role:'user',content}]})});
+  const d=await r.json().catch(()=>({}));
+  if(!r.ok) throw new Error('Claude '+r.status+(d.error&&d.error.message?': '+d.error.message:''));
+  const t=(d.content||[]).filter(x=>x.type==='text').map(x=>x.text).join('');
+  const m=t.match(/\{[\s\S]*\}/); if(!m) throw new Error('Claude no devolvió la lista');
+  return JSON.parse(m[0]);
+}
+async function consultar(c){
+  const out={plantnet:null,claude:null,errores:[]}; let intentos=0, sinRed=0;
+  const ses=S&&S.id===c.sesion?S:await getv('sesiones',c.sesion);
+  const pq=ses&&ses.paquete?(P&&P.id===ses.paquete?P:await getv('paquetes',ses.paquete)):null;
+  const red=(e,quien)=>{ if(e instanceof TypeError){sinRed++;out.errores.push(quien+': sin respuesta'+(quien==='Pl@ntNet'?' (¿falta autorizar el dominio en my.plantnet.org?)':''));} else out.errores.push(e.message); };
+  if(PLANTNET_GRUPOS.includes(c.grupo)){intentos++;try{out.plantnet=await pedirPlantNet(c);}catch(e){red(e,'Pl@ntNet');}}
+  if(!PLANTNET_GRUPOS.includes(c.grupo)||cfg('claude_plantas')!=='no'){intentos++;try{out.claude=await pedirClaude(c,out.plantnet,pq);}catch(e){red(e,'Claude');}}
+  if(intentos&&sinRed===intentos&&!navigator.onLine) out.sinRed=true;
+  return out;
+}
+async function anotarCandidatos(c,res){
+  const s=S&&S.id===c.sesion?S:await getv('sesiones',c.sesion); if(!s) return null;
+  const g=GRUPOS.find(x=>x.id===c.grupo);
+  const e={tipo:'candidatos',consulta:c.id,t:c.t,t_respuesta:ahoraISO(),pos:c.pos||undefined,grupo:c.grupo,grupo_nombre:g?g.nom:c.grupo,
+    organo:c.organo||undefined,nota:c.nota||undefined,fotos:c.fotos.map(f=>({nombre:f.nombre,hora:f.mod})),
+    plantnet:res.plantnet,claude:res.claude,errores:res.errores.length?res.errores:undefined,elegidos:[]};
+  s.eventos.push(e); s.eventos.sort((a,b)=>(a.t||'').localeCompare(b.t||''));
+  await put('sesiones',s.id,s); return e;
+}
+async function pendientesDe(sid){return (await todos('pendientes')).map(x=>x[1]).filter(c=>c.sesion===sid);}
+async function resolverPendientes(){
+  if(!navigator.onLine){toast('Sigue sin conexión',3000);return;}
+  const l=await pendientesDe(S.id); let ok=0;
+  for(const c of l){ toast('Consultando '+(ok+1)+' de '+l.length+'…',2000);
+    const res=await consultar(c); if(res.sinRed){toast('Sin red; quedan pendientes',3500);break;}
+    await anotarCandidatos(c,res); await del('pendientes',c.id); ok++; }
+  if(ok){toast(ok+' consulta'+(ok>1?'s':'')+' hecha'+(ok>1?'s':'')+'; están en el diario',4000);ir(diario,S.id);} else panel();
+}
+async function resultados(sid,cid){
+  dock(!!(S&&!S.fin));
+  const s=S&&S.id===sid?S:await getv('sesiones',sid);
+  const e=s.eventos.find(x=>x.tipo==='candidatos'&&x.consulta===cid); if(!e){history.back();return;}
+  const pq=s.paquete?(P&&P.id===s.paquete?P:await getv('paquetes',s.paquete)):null;
+  const fila=(x,extra,det)=>{const pe=buscarEsp(pq,x.cien);const on=e.elegidos.includes(x.cien);
+    return `<div class="cand ${on?'on':''}" data-c="${esc(x.cien)}"><div class="cab">${pe&&(pe.foto||(pe.rasgos&&pe.rasgos[0]))?`<img src="${pe.foto||pe.rasgos[0].foto}" alt="" data-z="${esc(pe.cien)}">`:''}
+      <div><b>${esc(x.comun||(pe&&pe.comun)||x.cien)}</b> <i style="color:var(--suave)">${esc(x.cien)}</i>${pe?`<div class="ok-esp">✓ esperable aquí (${pe.citas_epoca} / ${pe.citas})</div>`:''}</div><div class="pc">${extra}</div></div>
+      ${det?`<div class="det">${det}</div>`:''}${pe?confHTML(pe):''}</div>`;};
+  const cl=e.claude, pn=e.plantnet;
+  app.innerHTML=barra('Candidatos · '+e.grupo_nombre)+`
+  <p style="font-size:14px;color:var(--suave)">${hora(e.t)} · ${e.fotos.map(f=>esc(f.nombre)).join(', ')}</p>
+  ${e.errores?`<div class="aviso">${e.errores.map(esc).join('<br>')}</div>`:''}
+  ${cl&&cl.candidatos?`<div class="eti">Claude</div>`+cl.candidatos.map(x=>fila(x,esc(x.confianza||''),`${x.por_que?esc(x.por_que):''}${x.comprobar?`<br>🔎 ${esc(x.comprobar)}`:''}`)).join('')+(cl.falta?`<div class="pista">📷 ${esc(cl.falta)}</div>`:''):''}
+  ${pn?`<div class="eti">Pl@ntNet</div>`+(pn.length?pn.map(x=>fila(x,x.score+' %','')).join(''):'<p>Sin resultado.</p>'):''}
+  <p style="font-size:13px;color:var(--suave)">Toca los que te parezcan posibles; se marcan en el diario. Toca la foto para ver el rasgo que la separa de las parecidas.</p>
+  <button class="btn prim" id="vol">Volver</button>`;
+  app.querySelectorAll('[data-c]').forEach(x=>x.onclick=async()=>{const c=x.dataset.c;const i=e.elegidos.indexOf(c);i<0?e.elegidos.push(c):e.elegidos.splice(i,1);await put('sesiones',s.id,s);x.classList.toggle('on');});
+  activarZoom(pq?Object.values(pq.especies||{}).flat():[]);
+  $('#vol').onclick=()=>history.back();
+}
+function resumenCand(e){
+  if(e.elegidos&&e.elegidos.length) return 'elegidos: '+e.elegidos.join(', ');
+  const c=e.claude&&e.claude.candidatos&&e.claude.candidatos[0], p=e.plantnet&&e.plantnet[0];
+  return [c?c.cien+' ('+(c.confianza||'?')+', Claude)':'', p?p.cien+' ('+p.score+' %, Pl@ntNet)':''].filter(Boolean).join(' · ')||(e.errores?'sin respuesta':'sin resultado');
+}
+function leerHash(){ // configuración por enlace: …/campo/#pn=CLAVE&an=CLAVE
+  if(!location.hash||location.hash.length<4) return;
+  const h=new URLSearchParams(location.hash.slice(1)); let n=0;
+  if(h.get('pn')){ls('campo.plantnet',h.get('pn'));n++;} if(h.get('an')){ls('campo.anthropic',h.get('an'));n++;}
+  if(n){history.replaceState(null,'',location.pathname);setTimeout(()=>toast('Claves guardadas en este teléfono'),600);}
 }
 
 /* ---------- grabación ---------- */
@@ -433,7 +653,7 @@ function pararGrab(){return new Promise(ok=>{
 });}
 $('#bVoz').onclick=()=>rec?pararGrab():empezarGrab();
 $('#gStop').onclick=()=>pararGrab();
-$('#bAyuda').onclick=()=>{ if(!S){toast('Empieza antes una salida');return;} ir(ayuda); };
+$('#bAyuda').onclick=()=>{ if(!S){toast('Empieza antes una salida');return;} const gs=gruposModo(); gs.length===1?ir(grupo,gs[0].id,true):ir(ayuda); };
 
 /* ---------- exportar (ZIP sin compresión) ---------- */
 const CRC=(()=>{const t=new Uint32Array(256);for(let n=0;n<256;n++){let c=n;for(let k=0;k<8;k++)c=c&1?0xEDB88320^(c>>>1):c>>>1;t[n]=c>>>0;}return t;})();
@@ -456,7 +676,7 @@ async function exportar(s){
   const enc=new TextEncoder(); const files=[];
   const datos={formato:'campo-sesion-1',version:VERSION,id:s.id,titulo:s.titulo,paquete:s.paquete,inicio:s.inicio,fin:s.fin,eventos:s.eventos};
   files.push({name:'sesion.json',data:enc.encode(JSON.stringify(datos,null,1))});
-  const lineas=s.eventos.map(e=>`${hora(e.t)}  ${e.tipo}${e.grupo_nombre?' · '+e.grupo_nombre:''}${e.texto?' · '+e.texto:''}${e.archivo?' · '+e.archivo:''}${e.posibles&&e.posibles.length?' · posibles: '+e.posibles.join(', '):''}${e.pos?` · ${e.pos.lat}, ${e.pos.lon} (±${e.pos.prec} m)`:''}`);
+  const lineas=s.eventos.map(e=>`${hora(e.t)}  ${e.tipo}${e.grupo_nombre?' · '+e.grupo_nombre:''}${e.texto?' · '+e.texto:''}${e.archivo?' · '+e.archivo:''}${e.posibles&&e.posibles.length?' · posibles: '+e.posibles.join(', '):''}${e.tipo==='candidatos'?' · '+resumenCand(e)+' · fotos: '+e.fotos.map(f=>f.nombre).join(', '):''}${e.modo?' · modo '+e.modo:''}${e.pos?` · ${e.pos.lat}, ${e.pos.lon} (±${e.pos.prec} m)`:''}`);
   files.push({name:'diario.txt',data:enc.encode(`${s.titulo}\n${s.inicio} – ${s.fin||''}\n\n`+lineas.join('\n')+'\n')});
   for(const e of s.eventos) if(e.archivo){const b=await getv('audios',s.id+'/'+e.archivo); if(b) files.push({name:'notas/'+e.archivo,data:new Uint8Array(await b.arrayBuffer())});}
   const blob=await zip(files);
@@ -469,6 +689,7 @@ async function exportar(s){
 /* ---------- arranque ---------- */
 if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>r.update()).catch(()=>{});
 if(navigator.storage&&navigator.storage.persist) navigator.storage.persist().catch(()=>{});
+leerHash();
 (async()=>{ pila=[[inicio,[]]]; history.replaceState({n:1},''); const a=ls('campo.activa'); if(a&&await getv('sesiones',a)) abrirSesion(a); else inicio(); })();
 </script>
 </body>
