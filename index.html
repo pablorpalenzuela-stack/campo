@@ -94,7 +94,7 @@ textarea{min-height:80px}
 </div></div>
 <script>
 'use strict';
-const VERSION = '1.6.0';
+const VERSION = '1.6.1';
 /* ---------- grupos de ayuda ---------- */
 const GRUPOS = [
  {id:'lenosa', ico:'🌳', nom:'Árbol o arbusto', esp:['lenosa'],
@@ -675,7 +675,7 @@ async function hacerExpres(lat,lon,nombre,radio){
     lista.forEach((x,i)=>{const s=sp[i]; if(!s) return; const cien=s.canonicalName||s.scientificName; if(!cien||cien.split(' ').length<2) return;
       let sub=x.g; if(x.g==='planta') sub=NOM.lenosas[cien]!==undefined?'lenosa':'herbacea'; if(x.g==='galapago') sub='reptil';
       const com=(x.g==='ave'?NOM.aves[cien]:'')||(sub==='lenosa'?NOM.lenosas[cien]:'')||'';
-      (especies[sub]=especies[sub]||[]).push({cien,comun:com,familia:s.family||'',grupo:sub,citas_epoca:x.epoca,citas:x.todo});});
+      (especies[sub]=especies[sub]||[]).push({cien,comun:com,familia:s.family||'',grupo:sub,citas_epoca:x.epoca,citas:x.todo,_k:x.k});});
     for(const l of Object.values(especies)) l.sort((a,b)=>(b.citas_epoca-a.citas_epoca)||(b.citas-a.citas));
     paso('El tiempo de hoy y la altitud');
     let tiempo=null; try{tiempo=await jget(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max,wind_speed_10m_max,sunset&hourly=temperature_2m,precipitation_probability&forecast_days=1&timezone=Europe%2FMadrid`);}catch(e){}
@@ -684,6 +684,15 @@ async function hacerExpres(lat,lon,nombre,radio){
       mapa={img:await imgDataURL(u,900,(x,c)=>{x.strokeStyle='rgb(220,30,30)';x.lineWidth=5;x.beginPath();x.arc(c.width/2,c.height/2,14,0,7);x.stroke();}),bbox:[lat-dlat,lon-dlon,lat+dlat,lon+dlon]}; }catch(e){}
     const t=tiempo&&tiempo.daily;
     const tiempoHTML=t?`<p>Hoy: entre ${Math.round(t.temperature_2m_min[0])} y ${Math.round(t.temperature_2m_max[0])} °C; probabilidad de lluvia ${t.precipitation_probability_max[0]} %; viento de hasta ${Math.round(t.wind_speed_10m_max[0])} km/h; puesta de sol a las ${String(t.sunset[0]).slice(11,16)}. Altitud del punto: ${Math.round(tiempo.elevation)} m.</p>`:'';
+    paso('Nombres y fotos de iNaturalist en la zona');
+    const inat={};  // de una vez: especies observadas en iNaturalist dentro del recuadro, con foto y nombre en español
+    try{ for(let page=1;page<=3;page++){
+      const r=await jget('https://api.inaturalist.org/v1/observations/species_counts?'+new URLSearchParams({swlat:lat-dlat,swlng:lon-dlon,nelat:lat+dlat,nelng:lon+dlon,
+        verifiable:'true',locale:'es',preferred_place_id:'6774',per_page:'500',page:String(page)}));
+      for(const x of r.results||[]){const t=x.taxon; if(t&&t.name) inat[t.name.toLowerCase()]=t;}
+      if((r.results||[]).length<500) break; await espera(1000); } }catch(e){}
+    const ponComun=(e,t)=>{ if(!e.comun&&t&&t.preferred_common_name) e.comun=t.preferred_common_name[0].toUpperCase()+t.preferred_common_name.slice(1); };
+    for(const l of Object.values(especies)) for(const e of l) ponComun(e,inat[e.cien.toLowerCase()]);
     let cl=null, errClaude='';
     if(cfg('anthropic')){
       paso('Claude escribe el informe (un minuto, más o menos)');
@@ -716,14 +725,29 @@ Condiciones: en «html», solo <p>, <b> e <i>; unas 450 palabras en total entre 
       for(const [c,f] of Object.entries(cl.fijarse||{})) if(porCien[c]) porCien[c].fijarse=f;
       for(const [a,b,rasgo] of (cl.confunde||[])){ for(const [x,y] of [[a,b],[b,a]]){ const e=porCien[x]; if(!e) continue;
         (e.confunde=e.confunde||[]).push({cien:y,comun:(porCien[y]||{}).comun||''}); if(rasgo&&!(e.fijarse||'').includes(rasgo)) e.fijarse=(e.fijarse?e.fijarse+' ':'')+'Frente a '+((porCien[y]||{}).comun||y)+': '+rasgo; } } }
-    paso('Fotos de iNaturalist');
-    const conFoto=[...new Set([...(cl&&cl.destacadas||[]),...Object.values(especies).flatMap(l=>l.slice(0,4).map(e=>e.cien))])].filter(c=>porCien[c]).slice(0,32);
-    await enParalelo(conFoto,2,async c=>{ const e=porCien[c];
+    const fotos=async()=>{ // en segundo plano, con el informe ya en pantalla
+    // Las 40 más citadas de cada grupo y las destacadas por Claude (como en los informes hechos en casa)
+    const conFoto=[...new Set([...(cl&&cl.destacadas||[]),...Object.values(especies).flatMap(l=>l.slice(0,40).map(e=>e.cien))])].filter(c=>porCien[c]);
+    const sinTaxon=conFoto.filter(c=>!inat[c.toLowerCase()]);
+    // las que iNaturalist no ha visto en el recuadro: búsqueda una a una, despacio, solo las primeras
+    const prioridad=new Set([...(cl&&cl.destacadas||[]),...Object.values(especies).flatMap(l=>l.slice(0,10).map(e=>e.cien))]);
+    await enParalelo(sinTaxon.filter(c=>prioridad.has(c)).slice(0,30),1,async c=>{
       const r=await jget('https://api.inaturalist.org/v1/taxa?'+new URLSearchParams({q:c,locale:'es',preferred_place_id:'6774',per_page:'3'}));
-      const t=(r.results||[]).find(x=>(x.name||'').toLowerCase()===c.toLowerCase()); await espera(700); if(!t) return;
-      if(!e.comun&&t.preferred_common_name) e.comun=t.preferred_common_name[0].toUpperCase()+t.preferred_common_name.slice(1);
-      const dp=t.default_photo; if(!dp) return; const u=(dp.medium_url||dp.url||'').replace('/square.','/medium.');
-      try{e.foto=await imgDataURL(u,520);e.foto_autor=dp.attribution||'';}catch(err){} });
+      const t=(r.results||[]).find(x=>(x.name||'').toLowerCase()===c.toLowerCase()); if(t) inat[c.toLowerCase()]=t; await espera(800); });
+    let hechas=0;
+    await enParalelo(conFoto,6,async c=>{ const e=porCien[c]; const t=inat[c.toLowerCase()]; if(!t) return; ponComun(e,t);
+      const dp=t.default_photo; if(!dp) return; const u=(dp.medium_url||dp.url||'').replace('/square.','/medium.').replace('/small.','/medium.');
+      try{e.foto=await imgDataURL(u,520);e.foto_autor=dp.attribution||'';}catch(err){}
+      if(++hechas%40===0) await guardarFotos(); });
+    // las que siguen sin foto: una observación de iNaturalist con imagen, a través de GBIF (admite más consultas seguidas)
+    const INAT_GBIF='50c9509d-22c7-4a22-a47d-8c48425ef4a7';
+    await enParalelo(conFoto.filter(c=>!porCien[c].foto&&porCien[c]._k),5,async c=>{ const e=porCien[c];
+      const r=await jget(`https://api.gbif.org/v1/occurrence/search?taxonKey=${e._k}&datasetKey=${INAT_GBIF}&mediaType=StillImage&country=ES&limit=3`);
+      for(const o of r.results||[]){ const m=(o.media||[]).find(x=>x.identifier); if(!m) continue;
+        try{ e.foto=await imgDataURL(m.identifier.replace('/original.','/medium.'),520); e.foto_autor=[m.rightsHolder||m.creator,m.license&&m.license.split('/').slice(-3,-2)[0]].filter(Boolean).join(', '); break; }catch(err){} } });
+    for(const e of todas) delete e._k;
+    };
+    const guardarFotos=async()=>{ await put('paquetes',pq.id,pq); if(P&&P.id===pq.id) P=pq; };
     const d=new Date(); const id='ahora-'+d.getFullYear()+pad(d.getMonth()+1)+pad(d.getDate())+'-'+pad(d.getHours())+pad(d.getMinutes());
     const secciones=[]; if(cl&&cl.resumen) secciones.push({titulo:'En resumen',html:'<p>'+esc(cl.resumen)+'</p>'});
     if(tiempoHTML) secciones.push({titulo:'El tiempo hoy',html:tiempoHTML});
@@ -732,7 +756,10 @@ Condiciones: en «html», solo <p>, <b> e <i>; unas 450 palabras en total entre 
     const pq={formato:'campo-1',id,titulo:nombre,fecha:ahoraISO().slice(0,10),lugar:{lat,lon,radio_km:radio},generado:ahoraISO().slice(0,16),expres:true,
       fuente_especies:`GBIF, citas en un cuadrado de ${2*radio} × ${2*radio} km; «época» = meses ${meses.join(',')}`,secciones,especies,mapa};
     await put('paquetes',id,pq);
-    toast('Informe listo',2500); pila[pila.length-1]=[verPaquete,[id]]; history.replaceState({n:pila.length},''); verPaquete(id); window.scrollTo(0,0);
+    toast('Informe listo. Las fotos de las especies siguen llegando; no cierres Campo un par de minutos.',5000);
+    pila[pila.length-1]=[verPaquete,[id]]; history.replaceState({n:pila.length},''); verPaquete(id); window.scrollTo(0,0);
+    fotos().then(guardarFotos).then(()=>{ const n=todas.filter(e=>e.foto).length; toast(`Fotos listas: ${n} especies con foto`,3500);
+      if(pila.length&&[verPaquete,esperables].includes(pila[pila.length-1][0])){const [fn,args]=pila[pila.length-1];fn(...args);} }).catch(()=>{});
   }catch(e){
     app.innerHTML=barra('Informe ahora')+`<div class="aviso">No se pudo hacer el informe: ${esc(e.message)}. Comprueba la cobertura y vuelve a intentarlo, o empieza una salida sin informe previo.</div><button class="btn prim" id="otra">Volver a intentarlo</button><button class="btn" id="libre2">Salida sin informe previo</button>`;
     $('#otra').onclick=()=>hacerExpres(lat,lon,nombre,radio); $('#libre2').onclick=()=>empezar(null);
