@@ -94,7 +94,7 @@ textarea{min-height:80px}
 </div></div>
 <script>
 'use strict';
-const VERSION = '1.6.2';
+const VERSION = '1.6.3';
 /* ---------- grupos de ayuda ---------- */
 const GRUPOS = [
  {id:'lenosa', ico:'🌳', nom:'Árbol o arbusto', esp:['lenosa'],
@@ -399,15 +399,20 @@ function grupo(gid,directo){
 async function esperables(pid,clave,q){
   dock(!!S);
   const p=P&&P.id===pid?P:await getv('paquetes',pid);
-  const claves=Object.keys(p.especies||{}).filter(k=>(p.especies[k]||[]).length&&(!MODOS[MODO].esp||MODOS[MODO].esp.includes(k)));
-  clave=clave||claves[0];
+  const todasClaves=Object.keys(p.especies||{}).filter(k=>(p.especies[k]||[]).length);
+  let verTodo=false;
+  const filtra=()=>todasClaves.filter(k=>verTodo||!MODOS[MODO].esp||MODOS[MODO].esp.includes(k));
+  let claves=filtra();
+  clave=clave&&claves.includes(clave)?clave:claves[0];
   const pinta=()=>{
     const lista=p.especies[clave]||[]; const qq=(q||'').toLowerCase();
-    app.innerHTML=barra('Esperables')+`<div class="pest">${claves.map(k=>`<button class="${k===clave?'on':''}" data-k="${k}">${esc(NOMBRE_ESP[k]||k)} (${p.especies[k].length})</button>`).join('')}</div>
+    const ocultos=todasClaves.length-claves.length;
+    app.innerHTML=barra('Esperables')+(ocultos?`<div class="aviso">${esc(MODOS[MODO].nom)}: se ven solo ${claves.length} de ${todasClaves.length} grupos. <a href="#" id="vtodo">Ver todos</a></div>`:'')+`<div class="pest">${claves.map(k=>`<button class="${k===clave?'on':''}" data-k="${k}">${esc(NOMBRE_ESP[k]||k)} (${p.especies[k].length})</button>`).join('')}</div>
     <input type="search" id="bq" placeholder="Buscar nombre…" value="${esc(q||'')}">
     ${lista.filter(e=>!qq||(e.comun+' '+e.cien+' '+e.familia).toLowerCase().includes(qq)).map(e=>espHTML(e,false)).join('')}
     <p style="font-size:13px;color:var(--suave)">Citas en esta época / en todo el año. ${esc(p.fuente_especies||'')}</p>`;
     app.querySelectorAll('[data-k]').forEach(b=>b.onclick=()=>{clave=b.dataset.k;q='';pinta();});
+    const vt=$('#vtodo'); if(vt) vt.onclick=e=>{e.preventDefault();verTodo=true;claves=filtra();pinta();};
     activarZoom(lista);
     const bq=$('#bq');bq.oninput=()=>{q=bq.value;const pos=bq.selectionStart;pinta();const n=$('#bq');n.focus();n.setSelectionRange(pos,pos);};
   };
