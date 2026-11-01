@@ -76,6 +76,7 @@ textarea{min-height:80px}
 .cand .cab{display:flex;gap:10px;align-items:center}.cand img{width:64px;height:64px;object-fit:cover;border-radius:8px;flex:none}
 .cand .pc{margin-left:auto;font-size:13px;color:var(--suave);white-space:nowrap}.cand .det{font-size:14px;margin-top:4px;line-height:1.4}
 .ok-esp{font-size:12px;color:var(--verde);font-weight:700}
+.cien{font-weight:400;color:var(--suave)}.zoom .cien{color:#ccc}.esp .cien i,.esp .conf i{display:inline;font-size:inherit;color:inherit}
 .btn[disabled]{opacity:.5}
 .toast{position:fixed;left:16px;right:16px;bottom:100px;background:#1d241f;color:#fff;border-radius:10px;padding:12px 14px;z-index:30;font-size:15px}
 </style>
@@ -94,7 +95,7 @@ textarea{min-height:80px}
 </div></div>
 <script>
 'use strict';
-const VERSION = '1.6.4';
+const VERSION = '1.6.5';
 /* ---------- grupos de ayuda ---------- */
 const GRUPOS = [
  {id:'lenosa', ico:'🌳', nom:'Árbol o arbusto', esp:['lenosa'],
@@ -296,16 +297,18 @@ function confirmar(t){return window.confirm(t);}
 function espHTML(e,pos){
   const rg=e.rasgos&&e.rasgos.length;
   return `<div class="esp ${pos?'pos':''}" data-e="${esc(e.cien)}">${e.foto?`<img src="${e.foto}" alt="" data-z="${esc(e.cien)}">`:(rg?`<img src="${e.rasgos[0].foto}" alt="" data-z="${esc(e.cien)}">`:'<div class="sinfoto"></div>')}
-  <div class="n">${esc(e.comun||e.cien)}${e.comun?`<i>${esc(e.cien)}</i>`:''}${e.fijarse?`<div class="fj">👁 ${esc(e.fijarse)}</div>`:''}${confHTML(e)}</div><div class="c">${e.citas_epoca} / ${e.citas}</div></div>`;
+  <div class="n">${nomHTML(e.comun,e.cien)}${e.fijarse?`<div class="fj">👁 ${esc(e.fijarse)}</div>`:''}${confHTML(e)}</div><div class="c">${e.citas_epoca} / ${e.citas}</div></div>`;
 }
+// Regla de Pablo (1-XI-2026): el nombre vulgar más corriente y siempre el científico entre paréntesis
+function nomHTML(comun,cien){ return comun?`${esc(comun)} <span class="cien">(<i>${esc(cien)}</i>)</span>`:`<i>${esc(cien)}</i>`; }
 function confHTML(e){
   if(!e.confunde||!e.confunde.length) return '';
-  return `<div class="conf">⚠ Se confunde con ${e.confunde.map(c=>esc(c.comun||c.cien)).join(', ')}${e.rasgos&&e.rasgos.length?' · 🔍 toca la foto':''}</div>`;
+  return `<div class="conf">⚠ Se confunde con ${e.confunde.map(c=>nomHTML(c.comun,c.cien)).join(', ')}${e.rasgos&&e.rasgos.length?' · 🔍 toca la foto':''}</div>`;
 }
 function zoomEsp(e){
   const z=document.createElement('div');z.className='zoom';
-  z.innerHTML=`${e.foto?`<img src="${e.foto}" alt="">`:''}<div style="margin-top:10px"><b>${esc(e.comun||e.cien)}</b> <i>${esc(e.cien)}</i></div>${e.fijarse?`<div style="margin-top:6px">${esc(e.fijarse)}</div>`:''}${e.foto?`<small>Foto: iNaturalist, ${esc(e.foto_autor||'')}</small>`:''}
-  ${(e.rasgos||[]).map(r=>`<div class="rg"><div class="eti" style="color:#ddd">El rasgo que lo separa${e.confunde&&e.confunde.length?' de '+e.confunde.map(c=>esc(c.comun||c.cien)).join(', '):''}</div><img src="${r.foto}" alt=""><p>${esc(r.pie)}</p><small>${esc(r.autor)}</small></div>`).join('')}`;
+  z.innerHTML=`${e.foto?`<img src="${e.foto}" alt="">`:''}<div style="margin-top:10px"><b>${nomHTML(e.comun,e.cien)}</b></div>${e.fijarse?`<div style="margin-top:6px">${esc(e.fijarse)}</div>`:''}${e.foto?`<small>Foto: iNaturalist, ${esc(e.foto_autor||'')}</small>`:''}
+  ${(e.rasgos||[]).map(r=>`<div class="rg"><div class="eti" style="color:#ddd">El rasgo que lo separa${e.confunde&&e.confunde.length?' de '+e.confunde.map(c=>nomHTML(c.comun,c.cien)).join(', '):''}</div><img src="${r.foto}" alt=""><p>${esc(r.pie)}</p><small>${esc(r.autor)}</small></div>`).join('')}`;
   z.onclick=()=>z.remove();document.body.appendChild(z);
 }
 function activarZoom(lista){
@@ -601,7 +604,7 @@ async function resultados(sid,cid){
   const pq=s.paquete?(P&&P.id===s.paquete?P:await getv('paquetes',s.paquete)):null;
   const fila=(x,extra,det)=>{const pe=buscarEsp(pq,x.cien);const on=e.elegidos.includes(x.cien);
     return `<div class="cand ${on?'on':''}" data-c="${esc(x.cien)}"><div class="cab">${pe&&(pe.foto||(pe.rasgos&&pe.rasgos[0]))?`<img src="${pe.foto||pe.rasgos[0].foto}" alt="" data-z="${esc(pe.cien)}">`:''}
-      <div><b>${esc(x.comun||(pe&&pe.comun)||x.cien)}</b> <i style="color:var(--suave)">${esc(x.cien)}</i>${pe?`<div class="ok-esp">✓ esperable aquí (${pe.citas_epoca} / ${pe.citas})</div>`:''}</div><div class="pc">${extra}</div></div>
+      <div><b>${nomHTML((pe&&pe.comun)||x.comun,x.cien)}</b>${pe?`<div class="ok-esp">✓ esperable aquí (${pe.citas_epoca} / ${pe.citas})</div>`:''}</div><div class="pc">${extra}</div></div>
       ${det?`<div class="det">${det}</div>`:''}${pe?confHTML(pe):''}</div>`;};
   const cl=e.claude, pn=e.plantnet;
   app.innerHTML=barra('Candidatos · '+e.grupo_nombre)+`
@@ -749,7 +752,7 @@ Escribe en español de España, en prosa llana y sin adornos. Responde solo con 
  "fijarse":{"nombre científico":"en qué fijarse en el campo para reconocerla, en una frase"},
  "confunde":[["nombre científico A","nombre científico B","el rasgo que las separa"]],
  "destacadas":["nombre científico"]}
-Condiciones: en «html», solo <p>, <b> e <i>; unas 450 palabras en total entre todas las secciones, con más peso en el modo elegido y en lo propio de esta época. «fijarse»: unas 40 especies, las más útiles hoy. «confunde»: las parejas de la lista que se confunden en el campo, hasta 12. «destacadas»: hasta 20 especies para mostrar con foto. Si los datos de GBIF son escasos, dilo.`;
+Condiciones: cada vez que nombres una especie en el texto, pon su nombre vulgar más corriente en España y, detrás, el científico entre paréntesis y en cursiva, por ejemplo: madroño (<i>Arbutus unedo</i>); si no tiene nombre vulgar extendido, solo el científico en cursiva. En «fijarse» y «resumen» no hace falta repetir el nombre de la especie. En «html», solo <p>, <b> e <i>; unas 450 palabras en total entre todas las secciones, con más peso en el modo elegido y en lo propio de esta época. «fijarse»: unas 40 especies, las más útiles hoy. «confunde»: las parejas de la lista que se confunden en el campo, hasta 12. «destacadas»: hasta 20 especies para mostrar con foto. Si los datos de GBIF son escasos, dilo.`;
       // nombres comunes de España, en paralelo y con un modelo rápido: las especies sin nombre de las listas propias
       const sinLista=Object.values(especies).flatMap(l=>l.slice(0,45)).filter(e=>!e.comun||e._inat);
       const textoNombres=`Para cada especie de esta lista, da su nombre común usual en España (el de las guías de campo españolas, no los de Hispanoamérica). Si no tiene nombre común extendido en España, omítela. Solo la primera letra en mayúscula. Responde solo con un objeto JSON {"nombre científico":"nombre común"}, sin nada más.\n\n`+sinLista.map(e=>e.cien+(e.comun?' (iNaturalist: '+e.comun+')':'')).join('\n');
@@ -762,7 +765,7 @@ Condiciones: en «html», solo <p>, <b> e <i>; unas 450 palabras en total entre 
     if(cl){ for(const [c,n] of Object.entries(cl.nombres||{})) if(n&&porCien[c]&&(!porCien[c].comun||porCien[c]._inat)){ porCien[c].comun=n[0].toUpperCase()+n.slice(1); delete porCien[c]._inat; }
       for(const [c,f] of Object.entries(cl.fijarse||{})) if(porCien[c]) porCien[c].fijarse=f;
       for(const [a,b,rasgo] of (cl.confunde||[])){ for(const [x,y] of [[a,b],[b,a]]){ const e=porCien[x]; if(!e) continue;
-        (e.confunde=e.confunde||[]).push({cien:y,comun:(porCien[y]||{}).comun||''}); if(rasgo&&!(e.fijarse||'').includes(rasgo)) e.fijarse=(e.fijarse?e.fijarse+' ':'')+'Frente a '+((porCien[y]||{}).comun||y)+': '+rasgo; } } }
+        (e.confunde=e.confunde||[]).push({cien:y,comun:(porCien[y]||{}).comun||''}); if(rasgo&&!(e.fijarse||'').includes(rasgo)) e.fijarse=(e.fijarse?e.fijarse+' ':'')+'Frente a '+((porCien[y]||{}).comun?(porCien[y].comun.toLowerCase()+' ('+y+')'):y)+': '+rasgo; } } }
     const fotos=async()=>{ // en segundo plano, con el informe ya en pantalla
     // Las 40 más citadas de cada grupo y las destacadas por Claude (como en los informes hechos en casa)
     const conFoto=[...new Set([...(cl&&cl.destacadas||[]),...Object.values(especies).flatMap(l=>l.slice(0,40).map(e=>e.cien))])].filter(c=>porCien[c]);
