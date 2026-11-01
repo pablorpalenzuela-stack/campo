@@ -94,7 +94,7 @@ textarea{min-height:80px}
 </div></div>
 <script>
 'use strict';
-const VERSION = '1.5.0';
+const VERSION = '1.6.0';
 /* ---------- grupos de ayuda ---------- */
 const GRUPOS = [
  {id:'lenosa', ico:'🌳', nom:'Árbol o arbusto', esp:['lenosa'],
@@ -208,7 +208,8 @@ async function inicio(){
   ${activa?`<button class="btn prim" id="cont">Seguir con la salida<small>${esc(activa.titulo)} · desde las ${hora(activa.inicio).slice(0,5)}</small></button>`:''}
   <div class="eti">Informes previos en el teléfono</div>
   ${paqs.length?paqs.map(p=>`<button class="btn" data-p="${esc(p.id)}">${esc(p.titulo)}<small>${esc(p.fecha)} · ${Object.values(p.especies||{}).reduce((a,l)=>a+l.length,0)} especies esperables</small></button>`).join(''):'<p style="color:var(--suave)">Todavía no hay ninguno.</p>'}
-  <button class="btn prim" id="desc">⬇ Descargar informes previos<small>Necesita conexión</small></button>
+  <button class="btn prim" id="desc">⬇ Descargar informes previos<small>Los que ha preparado Claude en casa · necesita conexión</small></button>
+  <button class="btn prim" id="ahora">⚡ Informe ahora<small>Salida sobrevenida: aquí o en un sitio que elijas · necesita conexión</small></button>
   <label class="btn" style="text-align:center">📥 Cargar desde un archivo (.campo.json)<input type="file" id="fich" accept=".json,application/json" class="oculto"></label>
   <button class="btn" id="libre">Salida sin informe previo</button>
   <button class="btn" id="como">📖 Cómo se usa</button>
@@ -223,6 +224,7 @@ async function inicio(){
   $('#como').onclick=()=>ir(instrucciones);
   $('#desc').onclick=()=>ir(descargas);
   $('#ajus').onclick=()=>ir(ajustes);
+  $('#ahora').onclick=()=>ir(expres);
   activarModo(inicio);
 }
 async function descargas(){
@@ -250,6 +252,7 @@ function instrucciones(){
   <p>Elegir lugar y fecha entre las opciones de salida (asistente «Dónde ir», por hacer).</p>
   <div class="eti">2 · Informe previo</div>
   <p>Claude prepara el informe previo de ese lugar y fecha, con su paquete para el móvil, y lo publica. Aquí, con cobertura y antes de salir: «Descargar informes previos», leerlo y repasar las especies esperables. Después la salida funciona sin cobertura.</p>
+  <p><b>Salida sobrevenida</b>, sin informe preparado: «⚡ Informe ahora» en el inicio, con cobertura. Aquí, donde estás, o en un sitio que buscas por su nombre. En uno o dos minutos el teléfono reúne lo citado cerca, el tiempo y el mapa, y Claude escribe el comentario y las notas. Queda guardado como cualquier otro informe previo, y el ZIP de la salida lo lleva dentro para el gabinete.</p>
   <div class="eti">3 · Salida (con cobertura o sin ella)</div>
   <p>Empezar la actividad en el fēnix al salir. Si va la Nikon, ponerla en hora con el reloj. En Campo, «Empezar la salida».</p>
   <p>Fotos con la cámara normal del teléfono (o con la Nikon). <b>Después de cada foto o serie de fotos, una nota de voz</b>: cierra el grupo y dice qué es («quejigo junto al arroyo»; basta «fin»). Si sigue el mismo ejemplar, empezar la nota con «lo mismo» o «sigue el…». Las fotos hechas mientras se graba cuentan para esa nota.</p>
@@ -605,6 +608,136 @@ async function resultados(sid,cid){
   activarZoom(pq?Object.values(pq.especies||{}).flat():[]);
   $('#vol').onclick=()=>history.back();
 }
+/* ---------- informe exprés, hecho en el teléfono con cobertura (1.6.0) ---------- */
+const GBIF_GRUPOS={planta:'taxonKey=7707728',ave:'classKey=212',mamifero:'classKey=359',insecto:'classKey=216',aracnido:'classKey=367',reptil:'orderKey=11592253',galapago:'orderKey=11418114',anfibio:'classKey=131',hongo:'kingdomKey=5'};
+const MAX_G={planta:90,ave:60,insecto:40,hongo:30,mamifero:30,aracnido:20,reptil:20,galapago:5,anfibio:15};
+async function jget(u,ops,reintentos=5){ // con espera creciente si el servicio pide calma (429)
+  for(let i=0;;i++){ const r=await fetch(u,ops); if((r.status===429||r.status===503)&&i<reintentos){await espera(1000*(i+1)+Math.random()*500);continue;}
+    if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); } }
+async function enParalelo(items,n,fn){const out=new Array(items.length);let i=0;
+  await Promise.all(Array.from({length:Math.min(n,items.length)},async()=>{while(i<items.length){const k=i++;try{out[k]=await fn(items[k],k);}catch(e){out[k]=null;}}}));return out;}
+const espera=ms=>new Promise(ok=>setTimeout(ok,ms));
+const limpiaHTML=h=>String(h||'').replace(/<\/?(script|iframe|object|embed|style|link|meta)[^>]*>/gi,'').replace(/\son\w+\s*=\s*("[^"]*"|'[^']*')/gi,'');
+async function imgDataURL(url,lado=520,dibuja){
+  const im=await new Promise((ok,ko)=>{const i=new Image();i.crossOrigin='anonymous';i.onload=()=>ok(i);i.onerror=()=>ko(new Error('imagen'));i.src=url;});
+  const r=Math.min(1,lado/Math.max(im.naturalWidth,im.naturalHeight));
+  const c=document.createElement('canvas');c.width=Math.round(im.naturalWidth*r);c.height=Math.round(im.naturalHeight*r);
+  const x=c.getContext('2d');x.drawImage(im,0,0,c.width,c.height); if(dibuja) dibuja(x,c);
+  return c.toDataURL('image/jpeg',0.72);
+}
+async function nombreLugar(lat,lon){
+  try{const d=await jget(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&zoom=14&accept-language=es&lat=${lat}&lon=${lon}`);
+    const a=d.address||{}; const n=a.village||a.town||a.city||a.hamlet||a.suburb||a.municipality||''; const z=a.county||a.state||'';
+    return n?(n+(z&&z!==n?', '+z:'')):(d.name||'Mi posición');}catch(e){return 'Mi posición';}
+}
+function expres(){
+  dock(false);
+  let radio=2;
+  const pinta=()=>{
+    app.innerHTML=barra('Informe ahora')+`<p>Con cobertura, en uno o dos minutos: lo citado cerca en GBIF, el tiempo de hoy, el mapa y el comentario de Claude. Después la salida funciona sin cobertura.</p>
+    <div class="eti">Radio alrededor del punto</div><div class="pest">${[1,2,5].map(r=>`<button class="${r===radio?'on':''}" data-rad="${r}">${r} km</button>`).join('')}</div>
+    <button class="btn prim" id="aqui">📍 Aquí, donde estoy</button>
+    <div class="eti">O voy a un sitio</div><input type="search" id="sitio" placeholder="Ej.: puerto de Canencia, embalse de Santillana…">
+    <button class="btn" id="buscar">🔎 Buscar el sitio</button><div id="lugares"></div>
+    ${cfg('anthropic')?'':'<div class="aviso">Sin la clave de Claude el informe saldrá sin comentario ni notas. Se pone en Ajustes.</div>'}`;
+    app.querySelectorAll('[data-rad]').forEach(b=>b.onclick=()=>{radio=+b.dataset.rad;app.querySelectorAll('[data-rad]').forEach(x=>x.classList.toggle('on',x===b));});
+    $('#aqui').onclick=async()=>{ $('#aqui').disabled=true; $('#aqui').textContent='Buscando la posición…';
+      const p=await posicion(); if(!p){toast('El teléfono no da la posición',3500);pinta();return;}
+      const nom=await nombreLugar(p.lat,p.lon); hacerExpres(p.lat,p.lon,nom,radio); };
+    const buscar=async()=>{ const q=$('#sitio').value.trim(); if(!q) return; const L=$('#lugares'); L.innerHTML='<p style="color:var(--suave)">Buscando…</p>';
+      try{ const r=await jget('https://nominatim.openstreetmap.org/search?'+new URLSearchParams({q,format:'jsonv2',countrycodes:'es',limit:'6','accept-language':'es',addressdetails:'1'}));
+        if(!r.length){L.innerHTML='<p>No lo encuentro. Prueba con el pueblo más cercano.</p>';return;}
+        L.innerHTML='<div class="eti">¿Cuál de estos?</div>'+r.map((x,i)=>`<button class="btn" data-l="${i}">${esc(x.name||x.display_name.split(',')[0])}<small>${esc(x.display_name)}</small></button>`).join('');
+        L.querySelectorAll('[data-l]').forEach(b=>b.onclick=()=>{const x=r[+b.dataset.l];const a=x.address||{};
+          const base=x.name||x.display_name.split(',')[0].trim(); const mun=a.village||a.town||a.city||a.municipality||a.county||'';
+          hacerExpres(+(+x.lat).toFixed(5),+(+x.lon).toFixed(5),base+(mun&&mun!==base?' ('+mun+')':''),radio);});
+      }catch(e){L.innerHTML='<div class="aviso">No hay conexión o el buscador no responde.</div>';} };
+    $('#buscar').onclick=buscar; $('#sitio').onkeydown=e=>{if(e.key==='Enter')buscar();};
+  };
+  pinta();
+}
+async function hacerExpres(lat,lon,nombre,radio){
+  const pasos=[]; const paso=t=>{pasos.push(t);app.innerHTML=barra('Informe ahora')+`<h2>${esc(nombre)}</h2><p style="color:var(--suave)">${lat}, ${lon} · ${radio} km</p>`+pasos.map((x,i)=>`<div class="ev">${i<pasos.length-1?'✓':'⏳'} ${esc(x)}</div>`).join('');};
+  const hoy=new Date(); const m=hoy.getMonth()+1; const meses=[-1,0,1].map(k=>(m+k+11)%12+1);
+  const dlat=radio/111, dlon=radio/(111*Math.cos(lat*Math.PI/180));
+  const wkt=`POLYGON((${lon-dlon} ${lat-dlat},${lon+dlon} ${lat-dlat},${lon+dlon} ${lat+dlat},${lon-dlon} ${lat+dlat},${lon-dlon} ${lat-dlat}))`;
+  try{
+    paso('Citas de GBIF alrededor del punto');
+    const tareas=[]; for(const [g,q] of Object.entries(GBIF_GRUPOS)) for(const tag of ['epoca','todo']) tareas.push([g,q,tag]);
+    const res=await enParalelo(tareas,3,async([g,q,tag])=>jget(`https://api.gbif.org/v1/occurrence/search?${q}&geometry=${encodeURIComponent(wkt)}&limit=0&facet=speciesKey&facetLimit=${MAX_G[g]}${tag==='epoca'?meses.map(x=>'&month='+x).join(''):''}`));
+    const cuenta={}; tareas.forEach(([g,,tag],i)=>{const r=res[i]; if(!r) return; for(const c of ((r.facets||[])[0]||{}).counts||[]){ const o=((cuenta[g]=cuenta[g]||{})[c.name]=cuenta[g][c.name]||{epoca:0,todo:0}); o[tag]=c.count; }});
+    if(res.every(x=>!x)) throw new Error('GBIF no responde');
+    paso('Nombres de las especies');
+    const lista=[]; for(const [g,o] of Object.entries(cuenta)) Object.entries(o).sort((a,b)=>(b[1].epoca-a[1].epoca)||(b[1].todo-a[1].todo)).slice(0,MAX_G[g]).forEach(([k,v])=>lista.push({g,k,...v}));
+    const sp=await enParalelo(lista,5,x=>jget('https://api.gbif.org/v1/species/'+x.k));
+    let NOM={lenosas:{},aves:{}}; try{NOM=await jget('nombres.json');}catch(e){}
+    const especies={};
+    lista.forEach((x,i)=>{const s=sp[i]; if(!s) return; const cien=s.canonicalName||s.scientificName; if(!cien||cien.split(' ').length<2) return;
+      let sub=x.g; if(x.g==='planta') sub=NOM.lenosas[cien]!==undefined?'lenosa':'herbacea'; if(x.g==='galapago') sub='reptil';
+      const com=(x.g==='ave'?NOM.aves[cien]:'')||(sub==='lenosa'?NOM.lenosas[cien]:'')||'';
+      (especies[sub]=especies[sub]||[]).push({cien,comun:com,familia:s.family||'',grupo:sub,citas_epoca:x.epoca,citas:x.todo});});
+    for(const l of Object.values(especies)) l.sort((a,b)=>(b.citas_epoca-a.citas_epoca)||(b.citas-a.citas));
+    paso('El tiempo de hoy y la altitud');
+    let tiempo=null; try{tiempo=await jget(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max,wind_speed_10m_max,sunset&hourly=temperature_2m,precipitation_probability&forecast_days=1&timezone=Europe%2FMadrid`);}catch(e){}
+    paso('Mapa del IGN');
+    let mapa=null; try{ const u=`https://www.ign.es/wms-inspire/mapa-raster?SERVICE=WMS&REQUEST=GetMap&VERSION=1.3.0&LAYERS=mtn_rasterizado&STYLES=&CRS=EPSG:4326&BBOX=${lat-dlat},${lon-dlon},${lat+dlat},${lon+dlon}&WIDTH=900&HEIGHT=900&FORMAT=image/jpeg`;
+      mapa={img:await imgDataURL(u,900,(x,c)=>{x.strokeStyle='rgb(220,30,30)';x.lineWidth=5;x.beginPath();x.arc(c.width/2,c.height/2,14,0,7);x.stroke();}),bbox:[lat-dlat,lon-dlon,lat+dlat,lon+dlon]}; }catch(e){}
+    const t=tiempo&&tiempo.daily;
+    const tiempoHTML=t?`<p>Hoy: entre ${Math.round(t.temperature_2m_min[0])} y ${Math.round(t.temperature_2m_max[0])} °C; probabilidad de lluvia ${t.precipitation_probability_max[0]} %; viento de hasta ${Math.round(t.wind_speed_10m_max[0])} km/h; puesta de sol a las ${String(t.sunset[0]).slice(11,16)}. Altitud del punto: ${Math.round(tiempo.elevation)} m.</p>`:'';
+    let cl=null, errClaude='';
+    if(cfg('anthropic')){
+      paso('Claude escribe el informe (un minuto, más o menos)');
+      const resumenLista=Object.entries(especies).map(([k,l])=>`${NOMBRE_ESP[k]||k}: `+l.slice(0,k==='herbacea'?45:35).map(e=>`${e.comun?e.comun+' ':''}(${e.cien}) ${e.citas_epoca}/${e.citas}`).join('; ')).join('\n');
+      const texto=`Soy naturalista aficionado y salgo al campo ahora mismo, sin haber preparado la salida. Prepárame un informe previo breve para el móvil.
+Lugar: ${nombre} (${lat}, ${lon}), España; radio de ${radio} km. Fecha y hora: ${ahoraISO()}. ${tiempoHTML.replace(/<[^>]+>/g,'')}
+Modo de la salida: ${MODOS[MODO].nom}.
+Especies citadas en GBIF dentro del cuadrado, por grupos, con «citas en esta época (mes ± 1) / citas en todo el año»:
+${resumenLista}
+
+Escribe en español de España, en prosa llana y sin adornos. Responde solo con este JSON, sin nada más:
+{"resumen":"dos o tres frases: qué tipo de sitio es y qué merece la pena buscar hoy",
+ "secciones":[{"titulo":"Qué buscar hoy","html":"<p>…</p>"},{"titulo":"Plantas","html":"…"},{"titulo":"Aves","html":"…"},{"titulo":"Otros animales y rastros","html":"…"},{"titulo":"Material y precauciones","html":"…"}],
+ "nombres":{"nombre científico":"nombre común en España"},
+ "fijarse":{"nombre científico":"en qué fijarse en el campo para reconocerla, en una frase"},
+ "confunde":[["nombre científico A","nombre científico B","el rasgo que las separa"]],
+ "destacadas":["nombre científico"]}
+Condiciones: en «html», solo <p>, <b> e <i>; unas 450 palabras en total entre todas las secciones, con más peso en el modo elegido y en lo propio de esta época. «nombres»: todas las especies de la lista que no traen nombre común y lo tengan en España. «fijarse»: unas 40 especies, las más útiles hoy. «confunde»: las parejas de la lista que se confunden en el campo, hasta 12. «destacadas»: hasta 20 especies para mostrar con foto. Si los datos de GBIF son escasos, dilo.`;
+      try{ const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',
+          headers:{'content-type':'application/json','x-api-key':cfg('anthropic'),'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+          body:JSON.stringify({model:cfg('modelo')||MODELO_DEF,max_tokens:20000,messages:[{role:'user',content:texto}]})});
+        const d=await r.json().catch(()=>({})); if(!r.ok) throw new Error((r.status===429?'demasiadas consultas seguidas; espera un minuto':'error '+r.status)+(d.error&&d.error.message?' ('+d.error.message+')':''));
+        if(d.stop_reason==='max_tokens') throw new Error('la respuesta llegó cortada');
+        const s=(d.content||[]).filter(x=>x.type==='text').map(x=>x.text).join(''); const mm=s.match(/\{[\s\S]*\}/);
+        try{cl=mm?JSON.parse(mm[0]):null;}catch(e){throw new Error('la respuesta no se pudo leer');} if(!cl) throw new Error('la respuesta no traía el informe');
+      }catch(e){ errClaude=e.message; toast('Claude: '+e.message,5000); }
+    }
+    const todas=Object.values(especies).flat(); const porCien=Object.fromEntries(todas.map(e=>[e.cien,e]));
+    if(cl){ for(const [c,n] of Object.entries(cl.nombres||{})) if(porCien[c]&&!porCien[c].comun) porCien[c].comun=n;
+      for(const [c,f] of Object.entries(cl.fijarse||{})) if(porCien[c]) porCien[c].fijarse=f;
+      for(const [a,b,rasgo] of (cl.confunde||[])){ for(const [x,y] of [[a,b],[b,a]]){ const e=porCien[x]; if(!e) continue;
+        (e.confunde=e.confunde||[]).push({cien:y,comun:(porCien[y]||{}).comun||''}); if(rasgo&&!(e.fijarse||'').includes(rasgo)) e.fijarse=(e.fijarse?e.fijarse+' ':'')+'Frente a '+((porCien[y]||{}).comun||y)+': '+rasgo; } } }
+    paso('Fotos de iNaturalist');
+    const conFoto=[...new Set([...(cl&&cl.destacadas||[]),...Object.values(especies).flatMap(l=>l.slice(0,4).map(e=>e.cien))])].filter(c=>porCien[c]).slice(0,32);
+    await enParalelo(conFoto,2,async c=>{ const e=porCien[c];
+      const r=await jget('https://api.inaturalist.org/v1/taxa?'+new URLSearchParams({q:c,locale:'es',preferred_place_id:'6774',per_page:'3'}));
+      const t=(r.results||[]).find(x=>(x.name||'').toLowerCase()===c.toLowerCase()); await espera(700); if(!t) return;
+      if(!e.comun&&t.preferred_common_name) e.comun=t.preferred_common_name[0].toUpperCase()+t.preferred_common_name.slice(1);
+      const dp=t.default_photo; if(!dp) return; const u=(dp.medium_url||dp.url||'').replace('/square.','/medium.');
+      try{e.foto=await imgDataURL(u,520);e.foto_autor=dp.attribution||'';}catch(err){} });
+    const d=new Date(); const id='ahora-'+d.getFullYear()+pad(d.getMonth()+1)+pad(d.getDate())+'-'+pad(d.getHours())+pad(d.getMinutes());
+    const secciones=[]; if(cl&&cl.resumen) secciones.push({titulo:'En resumen',html:'<p>'+esc(cl.resumen)+'</p>'});
+    if(tiempoHTML) secciones.push({titulo:'El tiempo hoy',html:tiempoHTML});
+    if(cl) for(const s of cl.secciones||[]) secciones.push({titulo:s.titulo,html:limpiaHTML(s.html)});
+    secciones.push({titulo:'Cómo se ha hecho',html:`<p>Informe exprés hecho en el teléfono el ${d.toLocaleString('es-ES')}: citas de GBIF en un cuadrado de ${2*radio} × ${2*radio} km${cl?', comentario y notas de Claude':''}, tiempo de Open-Meteo, mapa del IGN y fotos de iNaturalist. Sin la geología del IGME ni las fotos del rasgo clave.${errClaude?' Claude no pudo escribir el comentario: '+esc(errClaude)+'.':''}</p>`});
+    const pq={formato:'campo-1',id,titulo:nombre,fecha:ahoraISO().slice(0,10),lugar:{lat,lon,radio_km:radio},generado:ahoraISO().slice(0,16),expres:true,
+      fuente_especies:`GBIF, citas en un cuadrado de ${2*radio} × ${2*radio} km; «época» = meses ${meses.join(',')}`,secciones,especies,mapa};
+    await put('paquetes',id,pq);
+    toast('Informe listo',2500); pila[pila.length-1]=[verPaquete,[id]]; history.replaceState({n:pila.length},''); verPaquete(id); window.scrollTo(0,0);
+  }catch(e){
+    app.innerHTML=barra('Informe ahora')+`<div class="aviso">No se pudo hacer el informe: ${esc(e.message)}. Comprueba la cobertura y vuelve a intentarlo, o empieza una salida sin informe previo.</div><button class="btn prim" id="otra">Volver a intentarlo</button><button class="btn" id="libre2">Salida sin informe previo</button>`;
+    $('#otra').onclick=()=>hacerExpres(lat,lon,nombre,radio); $('#libre2').onclick=()=>empezar(null);
+  }
+}
 function resumenCand(e){
   if(e.elegidos&&e.elegidos.length) return 'elegidos: '+e.elegidos.join(', ');
   const c=e.claude&&e.claude.candidatos&&e.claude.candidatos[0], p=e.plantnet&&e.plantnet[0];
@@ -678,6 +811,10 @@ async function exportar(s){
   files.push({name:'sesion.json',data:enc.encode(JSON.stringify(datos,null,1))});
   const lineas=s.eventos.map(e=>`${hora(e.t)}  ${e.tipo}${e.grupo_nombre?' · '+e.grupo_nombre:''}${e.texto?' · '+e.texto:''}${e.archivo?' · '+e.archivo:''}${e.posibles&&e.posibles.length?' · posibles: '+e.posibles.join(', '):''}${e.tipo==='candidatos'?' · '+resumenCand(e)+' · fotos: '+e.fotos.map(f=>f.nombre).join(', '):''}${e.modo?' · modo '+e.modo:''}${e.pos?` · ${e.pos.lat}, ${e.pos.lon} (±${e.pos.prec} m)`:''}`);
   files.push({name:'diario.txt',data:enc.encode(`${s.titulo}\n${s.inicio} – ${s.fin||''}\n\n`+lineas.join('\n')+'\n')});
+  if(s.paquete){ const pq=await getv('paquetes',s.paquete);
+    if(pq&&pq.expres){ const sinFotos=JSON.parse(JSON.stringify(pq)); sinFotos.mapa=pq.mapa?{bbox:pq.mapa.bbox}:null;
+      for(const l of Object.values(sinFotos.especies||{})) for(const e of l){delete e.foto;}
+      files.push({name:'informe_previo.json',data:enc.encode(JSON.stringify(sinFotos,null,1))}); } }
   for(const e of s.eventos) if(e.archivo){const b=await getv('audios',s.id+'/'+e.archivo); if(b) files.push({name:'notas/'+e.archivo,data:new Uint8Array(await b.arrayBuffer())});}
   const blob=await zip(files);
   const i=s.inicio; const nombre=`campo-${i.slice(0,10).replace(/-/g,'')}-${i.slice(11,16).replace(':','')}-${(s.paquete||'libre').replace(/[^a-z0-9-]/gi,'')}.zip`;
