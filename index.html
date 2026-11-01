@@ -94,7 +94,7 @@ textarea{min-height:80px}
 </div></div>
 <script>
 'use strict';
-const VERSION = '1.6.3';
+const VERSION = '1.6.4';
 /* ---------- grupos de ayuda ---------- */
 const GRUPOS = [
  {id:'lenosa', ico:'🌳', nom:'Árbol o arbusto', esp:['lenosa'],
@@ -214,6 +214,7 @@ async function inicio(){
   <button class="btn" id="libre">Salida sin informe previo</button>
   <button class="btn" id="como">📖 Cómo se usa</button>
   <button class="btn" id="ajus">⚙ Ajustes<small>Claves de Pl@ntNet y de Claude para los candidatos con cobertura</small></button>
+  <button class="btn" id="guar">🗑 Guardado en el teléfono<small>Ver y borrar informes previos y salidas</small></button>
   ${ses.filter(s=>s.fin).length?`<div class="eti">Salidas terminadas</div>`+ses.filter(s=>s.fin).slice(0,8).map(s=>`<button class="btn" data-s="${esc(s.id)}">${esc(s.titulo)}<small>${s.inicio.slice(0,10)} · ${s.eventos.length} anotaciones${s.exportada?' · exportada':''}</small></button>`).join(''):''}
   <p style="color:var(--suave);font-size:13px;margin-top:18px">Versión ${VERSION}. Funciona sin conexión una vez instalada. Las fotos se hacen con la cámara del teléfono; aquí quedan las notas de voz y las ayudas, con su hora, para encajarlas después con las fotos y el track.</p>`;
   if(activa) $('#cont').onclick=()=>abrirSesion(activa.id);
@@ -225,6 +226,7 @@ async function inicio(){
   $('#desc').onclick=()=>ir(descargas);
   $('#ajus').onclick=()=>ir(ajustes);
   $('#ahora').onclick=()=>ir(expres);
+  $('#guar').onclick=()=>ir(guardado);
   activarModo(inicio);
 }
 async function descargas(){
@@ -630,6 +632,15 @@ async function imgDataURL(url,lado=520,dibuja){
   const x=c.getContext('2d');x.drawImage(im,0,0,c.width,c.height); if(dibuja) dibuja(x,c);
   return c.toDataURL('image/jpeg',0.72);
 }
+async function llamarClaude(texto,modelo,maxTok){
+  const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',
+    headers:{'content-type':'application/json','x-api-key':cfg('anthropic'),'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+    body:JSON.stringify({model:modelo,max_tokens:maxTok,messages:[{role:'user',content:texto}]})});
+  const d=await r.json().catch(()=>({})); if(!r.ok) throw new Error((r.status===429?'demasiadas consultas seguidas; espera un minuto':'error '+r.status)+(d.error&&d.error.message?' ('+d.error.message+')':''));
+  if(d.stop_reason==='max_tokens') throw new Error('la respuesta llegó cortada');
+  const s=(d.content||[]).filter(x=>x.type==='text').map(x=>x.text).join(''); const mm=s.match(/\{[\s\S]*\}/);
+  try{ const j=mm?JSON.parse(mm[0]):null; if(!j) throw 0; return j; }catch(e){ throw new Error('la respuesta no se pudo leer'); }
+}
 async function blobConPlazo(url,ms){ const ac=new AbortController(); const t=setTimeout(()=>ac.abort(),ms);
   try{ const r=await fetch(url,{signal:ac.signal,mode:'cors'}); if(!r.ok) throw new Error('HTTP '+r.status); const b=await r.blob();
     if(!/^image\//.test(b.type)) throw new Error('no es imagen'); return b; } finally{ clearTimeout(t); } }
@@ -720,7 +731,7 @@ async function hacerExpres(lat,lon,nombre,radio){
         verifiable:'true',locale:'es',preferred_place_id:'6774',per_page:'500',page:String(page)}));
       for(const x of r.results||[]){const t=x.taxon; if(t&&t.name) inat[t.name.toLowerCase()]=t;}
       if((r.results||[]).length<500) break; await espera(1000); } }catch(e){}
-    const ponComun=(e,t)=>{ if(!e.comun&&t&&t.preferred_common_name) e.comun=t.preferred_common_name[0].toUpperCase()+t.preferred_common_name.slice(1); };
+    const ponComun=(e,t)=>{ if(!e.comun&&t&&t.preferred_common_name){ e.comun=t.preferred_common_name[0].toUpperCase()+t.preferred_common_name.slice(1); e._inat=true; } };
     for(const l of Object.values(especies)) for(const e of l) ponComun(e,inat[e.cien.toLowerCase()]);
     let cl=null, errClaude='';
     if(cfg('anthropic')){
@@ -735,22 +746,20 @@ ${resumenLista}
 Escribe en español de España, en prosa llana y sin adornos. Responde solo con este JSON, sin nada más:
 {"resumen":"dos o tres frases: qué tipo de sitio es y qué merece la pena buscar hoy",
  "secciones":[{"titulo":"Qué buscar hoy","html":"<p>…</p>"},{"titulo":"Plantas","html":"…"},{"titulo":"Aves","html":"…"},{"titulo":"Otros animales y rastros","html":"…"},{"titulo":"Material y precauciones","html":"…"}],
- "nombres":{"nombre científico":"nombre común en España"},
  "fijarse":{"nombre científico":"en qué fijarse en el campo para reconocerla, en una frase"},
  "confunde":[["nombre científico A","nombre científico B","el rasgo que las separa"]],
  "destacadas":["nombre científico"]}
-Condiciones: en «html», solo <p>, <b> e <i>; unas 450 palabras en total entre todas las secciones, con más peso en el modo elegido y en lo propio de esta época. «nombres»: todas las especies de la lista que no traen nombre común y lo tengan en España. «fijarse»: unas 40 especies, las más útiles hoy. «confunde»: las parejas de la lista que se confunden en el campo, hasta 12. «destacadas»: hasta 20 especies para mostrar con foto. Si los datos de GBIF son escasos, dilo.`;
-      try{ const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',
-          headers:{'content-type':'application/json','x-api-key':cfg('anthropic'),'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
-          body:JSON.stringify({model:cfg('modelo')||MODELO_DEF,max_tokens:20000,messages:[{role:'user',content:texto}]})});
-        const d=await r.json().catch(()=>({})); if(!r.ok) throw new Error((r.status===429?'demasiadas consultas seguidas; espera un minuto':'error '+r.status)+(d.error&&d.error.message?' ('+d.error.message+')':''));
-        if(d.stop_reason==='max_tokens') throw new Error('la respuesta llegó cortada');
-        const s=(d.content||[]).filter(x=>x.type==='text').map(x=>x.text).join(''); const mm=s.match(/\{[\s\S]*\}/);
-        try{cl=mm?JSON.parse(mm[0]):null;}catch(e){throw new Error('la respuesta no se pudo leer');} if(!cl) throw new Error('la respuesta no traía el informe');
-      }catch(e){ errClaude=e.message; toast('Claude: '+e.message,5000); }
+Condiciones: en «html», solo <p>, <b> e <i>; unas 450 palabras en total entre todas las secciones, con más peso en el modo elegido y en lo propio de esta época. «fijarse»: unas 40 especies, las más útiles hoy. «confunde»: las parejas de la lista que se confunden en el campo, hasta 12. «destacadas»: hasta 20 especies para mostrar con foto. Si los datos de GBIF son escasos, dilo.`;
+      // nombres comunes de España, en paralelo y con un modelo rápido: las especies sin nombre de las listas propias
+      const sinLista=Object.values(especies).flatMap(l=>l.slice(0,45)).filter(e=>!e.comun||e._inat);
+      const textoNombres=`Para cada especie de esta lista, da su nombre común usual en España (el de las guías de campo españolas, no los de Hispanoamérica). Si no tiene nombre común extendido en España, omítela. Solo la primera letra en mayúscula. Responde solo con un objeto JSON {"nombre científico":"nombre común"}, sin nada más.\n\n`+sinLista.map(e=>e.cien+(e.comun?' (iNaturalist: '+e.comun+')':'')).join('\n');
+      const [r1,r2]=await Promise.allSettled([llamarClaude(texto,cfg('modelo')||MODELO_DEF,20000), sinLista.length?llamarClaude(textoNombres,'claude-haiku-5-5',24000):Promise.resolve({})]);
+      if(r1.status==='fulfilled') cl=r1.value; else { errClaude=r1.reason.message; toast('Claude: '+errClaude,5000); }
+      if(r2.status==='fulfilled'){ cl=cl||{}; cl.nombres=r2.value; }
     }
     const todas=Object.values(especies).flat(); const porCien=Object.fromEntries(todas.map(e=>[e.cien,e]));
-    if(cl){ for(const [c,n] of Object.entries(cl.nombres||{})) if(porCien[c]&&!porCien[c].comun) porCien[c].comun=n;
+    // el nombre de Claude (usual en España) sustituye al de iNaturalist, que a veces es americano; no toca leñosas ni aves de las listas propias
+    if(cl){ for(const [c,n] of Object.entries(cl.nombres||{})) if(n&&porCien[c]&&(!porCien[c].comun||porCien[c]._inat)){ porCien[c].comun=n[0].toUpperCase()+n.slice(1); delete porCien[c]._inat; }
       for(const [c,f] of Object.entries(cl.fijarse||{})) if(porCien[c]) porCien[c].fijarse=f;
       for(const [a,b,rasgo] of (cl.confunde||[])){ for(const [x,y] of [[a,b],[b,a]]){ const e=porCien[x]; if(!e) continue;
         (e.confunde=e.confunde||[]).push({cien:y,comun:(porCien[y]||{}).comun||''}); if(rasgo&&!(e.fijarse||'').includes(rasgo)) e.fijarse=(e.fijarse?e.fijarse+' ':'')+'Frente a '+((porCien[y]||{}).comun||y)+': '+rasgo; } } }
@@ -774,7 +783,7 @@ Condiciones: en «html», solo <p>, <b> e <i>; unas 450 palabras en total entre 
       const r=await jget(`https://api.gbif.org/v1/occurrence/search?taxonKey=${e._k}&datasetKey=${INAT_GBIF}&mediaType=StillImage&country=ES&limit=3`);
       for(const o of r.results||[]){ const m=(o.media||[]).find(x=>x.identifier); if(!m) continue;
         try{ e.foto=await imgDataURL(m.identifier.replace('/original.','/medium.'),520); e.foto_autor=[m.rightsHolder||m.creator,m.license&&m.license.split('/').slice(-3,-2)[0]].filter(Boolean).join(', '); break; }catch(err){} } });
-    for(const e of todas) delete e._k;
+    for(const e of todas){ delete e._k; delete e._inat; }
     };
     const guardarFotos=async()=>{ await put('paquetes',pq.id,pq); if(P&&P.id===pq.id) P=pq; };
     const d=new Date(); const id='ahora-'+d.getFullYear()+pad(d.getMonth()+1)+pad(d.getDate())+'-'+pad(d.getHours())+pad(d.getMinutes());
@@ -793,6 +802,38 @@ Condiciones: en «html», solo <p>, <b> e <i>; unas 450 palabras en total entre 
     app.innerHTML=barra('Informe ahora')+`<div class="aviso">No se pudo hacer el informe: ${esc(e.message)}. Comprueba la cobertura y vuelve a intentarlo, o empieza una salida sin informe previo.</div><button class="btn prim" id="otra">Volver a intentarlo</button><button class="btn" id="libre2">Salida sin informe previo</button>`;
     $('#otra').onclick=()=>hacerExpres(lat,lon,nombre,radio); $('#libre2').onclick=()=>empezar(null);
   }
+}
+/* ---------- lo guardado en el teléfono: ver y borrar (1.6.4) ---------- */
+async function guardado(){
+  dock(false);
+  const paqs=(await todos('paquetes')).map(x=>x[1]).sort((a,b)=>(b.generado||'').localeCompare(a.generado||''));
+  const ses=(await todos('sesiones')).map(x=>x[1]).filter(s=>s.fin).sort((a,b)=>b.inicio.localeCompare(a.inicio));
+  const tam=o=>{const n=JSON.stringify(o).length;return n>1048576?(n/1048576).toFixed(1)+' MB':Math.max(1,Math.round(n/1024))+' KB';};
+  const sel=new Set();
+  const pinta=()=>{
+    app.innerHTML=barra('Guardado en el teléfono')+`
+    <p style="font-size:14px;color:var(--suave)">Marca lo que quieras borrar. Los informes finales en PDF están en el ordenador, no aquí.</p>
+    <div class="eti">Informes previos (${paqs.length})</div>
+    ${paqs.map(p=>`<div class="check ${sel.has('p:'+p.id)?'ok':''}" data-x="p:${esc(p.id)}"><div class="caja">${sel.has('p:'+p.id)?'✓':''}</div><div class="txt">${esc(p.titulo)}<br><small style="color:var(--suave)">${esc(p.fecha)}${p.expres?' · informe ahora':''} · ${tam(p)}</small></div></div>`).join('')||'<p>Ninguno.</p>'}
+    <div class="eti">Salidas terminadas (${ses.length})</div>
+    ${ses.map(s=>`<div class="check ${sel.has('s:'+s.id)?'ok':''}" data-x="s:${esc(s.id)}"><div class="caja">${sel.has('s:'+s.id)?'✓':''}</div><div class="txt">${esc(s.titulo)}<br><small style="color:var(--suave)">${s.inicio.slice(0,16).replace('T',' ')} · ${s.eventos.length} anotaciones · ${s.exportada?'archivo guardado':'<b style="color:var(--rojo)">sin archivo guardado</b>'}</small></div></div>`).join('')||'<p>Ninguna.</p>'}
+    <div class="fila"><button class="btn mini" id="todo">Marcar todo</button><button class="btn mini" id="nada">Desmarcar</button></div>
+    <button class="btn peligro" id="borrar" ${sel.size?'':'disabled'}>Borrar lo marcado (${sel.size})</button>`;
+    app.querySelectorAll('[data-x]').forEach(x=>x.onclick=()=>{const k=x.dataset.x;sel.has(k)?sel.delete(k):sel.add(k);pinta();});
+    $('#todo').onclick=()=>{paqs.forEach(p=>sel.add('p:'+p.id));ses.forEach(s=>sel.add('s:'+s.id));pinta();};
+    $('#nada').onclick=()=>{sel.clear();pinta();};
+    $('#borrar').onclick=async()=>{
+      const sinArchivo=ses.filter(s=>sel.has('s:'+s.id)&&!s.exportada).length;
+      const enUso=S&&!S.fin&&S.paquete&&sel.has('p:'+S.paquete);
+      if(!confirmar(`¿Borrar ${sel.size} elemento${sel.size>1?'s':''} del teléfono? No se puede deshacer.`+(sinArchivo?`\n\nOjo: ${sinArchivo} salida${sinArchivo>1?'s':''} no tiene${sinArchivo>1?'n':''} el archivo guardado en Descargas; sus notas de voz se perderán.`:'')+(enUso?'\n\nEl informe de la salida en curso se quitará, pero la salida sigue.':''))) return;
+      for(const k of sel){ const [t,id]=[k[0],k.slice(2)];
+        if(t==='p'){ await del('paquetes',id); if(P&&P.id===id) P=null; }
+        else { const s=ses.find(x=>x.id===id); if(s){ for(const e of s.eventos) if(e.archivo) await del('audios',s.id+'/'+e.archivo); }
+          for(const c of await pendientesDe(id)) await del('pendientes',c.id); await del('sesiones',id); } }
+      toast('Borrado'); guardado();
+    };
+  };
+  pinta();
 }
 function resumenCand(e){
   if(e.elegidos&&e.elegidos.length) return 'elegidos: '+e.elegidos.join(', ');
