@@ -1,5 +1,5 @@
 // Campo: caché para funcionar sin conexión
-const CACHE = 'campo-v1.8.0';
+const CACHE = 'campo-v1.9.0';
 const FILES = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png', './nombres.json', './pelagicas.json'];
 self.addEventListener('install', e => { e.waitUntil(caches.open(CACHE).then(async c => { await c.addAll(FILES);
     // las fotos de la lista de pelágicas, para verlas sin conexión

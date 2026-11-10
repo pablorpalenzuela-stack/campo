@@ -22,7 +22,7 @@
    "fecha": "2026-11-14",
    "generado": "2026-11-10T16:39",
    "archivo": "20261114-altomira.campo.json",
-   "bytes": 4817506
+   "bytes": 4820984
   },
   {
    "id": "20261114-el-hito",
@@ -30,7 +30,15 @@
    "fecha": "2026-11-14",
    "generado": "2026-11-10T16:39",
    "archivo": "20261114-el-hito.campo.json",
-   "bytes": 5675648
+   "bytes": 5680511
+  },
+  {
+   "id": "20261114-yesos",
+   "titulo": "Yesos de Caracenilla",
+   "fecha": "2026-11-14",
+   "generado": "2026-11-10T18:13",
+   "archivo": "20261114-yesos.campo.json",
+   "bytes": 3897095
   }
  ]
 }

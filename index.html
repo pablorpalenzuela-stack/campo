@@ -67,6 +67,7 @@ textarea{min-height:80px}
 .ev audio{width:100%;margin-top:4px}
 .aviso{background:var(--azul);border-radius:10px;padding:10px 12px;font-size:15px;margin:10px 0}
 .mapa{position:relative}.mapa img{width:100%;border-radius:10px;display:block}
+.mapa svg.trk{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}.leyenda{font-size:14px;margin:8px 0}.leyenda div{display:flex;align-items:center;gap:8px;margin:3px 0}.leyenda span{display:inline-block;width:22px;height:5px;border-radius:3px}
 .mapa .yo{position:absolute;width:18px;height:18px;margin:-9px 0 0 -9px;border-radius:50%;background:#1a73e8;border:3px solid #fff;box-shadow:0 0 0 2px #1a73e8}
 .oculto{display:none!important}
 .grab{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:20;display:flex;align-items:center;justify-content:center}
@@ -102,7 +103,7 @@ textarea{min-height:80px}
 </div></div>
 <script>
 'use strict';
-const VERSION = '1.8.0';
+const VERSION = '1.9.0';
 /* ---------- grupos de ayuda ---------- */
 const GRUPOS = [
  {id:'lenosa', ico:'🌳', nom:'Árbol o arbusto', esp:['lenosa'],
@@ -280,25 +281,28 @@ async function descargas(){
 function instrucciones(){
   dock(false);
   app.innerHTML=barra('Cómo se usa')+`<h2>Una excursión, de principio a fin</h2>
-  <div class="eti">1 · Dónde ir</div>
-  <p>Elegir lugar y fecha entre las opciones de salida (asistente «Dónde ir», por hacer).</p>
-  <div class="eti">2 · Informe previo</div>
-  <p>Claude prepara el informe previo de ese lugar y fecha, con su paquete para el móvil, y lo publica. Aquí, con cobertura y antes de salir: «Descargar informes previos», leerlo y repasar las especies esperables. Después la salida funciona sin cobertura.</p>
-  <p><b>Salida sobrevenida</b>, sin informe preparado: «⚡ Informe ahora» en el inicio, con cobertura. Aquí, donde estás, o en un sitio que buscas por su nombre. En uno o dos minutos el teléfono reúne lo citado cerca, el tiempo y el mapa, y Claude escribe el comentario y las notas. Queda guardado como cualquier otro informe previo, y el ZIP de la salida lo lleva dentro para el gabinete.</p>
-  <div class="eti">3 · Salida (con cobertura o sin ella)</div>
-  <p>Empezar la actividad en el fēnix al salir. Si va la Nikon, ponerla en hora con el reloj. En Campo, «Empezar la salida».</p>
-  <p><b>Fotos</b>: el botón <b>📷 Foto</b>, siempre a la vista junto a «Nota de voz» y «Ayuda», abre la cámara del teléfono y vuelve a Campo al aceptar la foto. Campo la guarda con su hora y su posición, la lista en el diario y la lleva al ZIP, en la carpeta <i>fotos</i>. Tras cada foto, tres opciones: «Otra foto» (del mismo ejemplar), «Pedir candidatos con estas fotos» y «Listo». Las fotos de la Nikon o de la cámara normal siguen valiendo; se encajan después por la hora.</p>
+  <div class="eti">1 · Elegir la salida, en diálogo con Claude</div>
+  <p>Desde el ordenador. Claude pregunta primero la distancia y el interés (y la fecha), propone dos o tres salidas con el motivo de que toquen ahora (época, lo que se está viendo en eBird e iNaturalist, el tiempo) y se afina el plan: senderos, qué más ver, horarios. La página «Dónde ir» hará este diálogo cuando esté hecha.</p>
+  <div class="eti">2 · «Antes de ir», para motivar</div>
+  <p>Con el plan decidido, Claude escribe un texto para los que vayan: el día por horas, qué se verá en cada sitio y por qué ahora, el tiempo y qué llevar. Es el texto que aparece aquí como informe previo.</p>
+  <div class="eti">3 · Informe estándar, tracks y paquete</div>
+  <p>Acordada la salida, Claude saca el informe estándar de «Antes de ir» de cada sitio, con la geología y lo que puede esperarse, y prepara los <b>tracks previstos</b> de cada paseo para no perderse: van al reloj y salen dibujados en el <b>Mapa</b> de Campo, con tu posición encima y la distancia al track. Publica también el paquete para el móvil. Aquí, con cobertura y antes de salir: «Descargar informes previos». Después la salida funciona sin cobertura.</p>
+  <p><b>Salida sobrevenida</b>, sin informe preparado: «⚡ Informe ahora» en el inicio, con cobertura. Aquí, donde estás, o en un sitio que buscas por su nombre. En uno o dos minutos el teléfono reúne lo citado cerca, el tiempo y el mapa, y Claude escribe el comentario y las notas.</p>
+  <div class="eti">4 · Campo: notas, fotos y muestras</div>
+  <p>Empezar la actividad en el fēnix al salir: ese es el <b>track real</b>, que dice dónde se vio cada cosa. Si va la Nikon, ponerla en hora con el reloj. En Campo, «Empezar la salida».</p>
+  <p><b>Fotos</b>: el botón <b>📷 Foto</b>, siempre a la vista junto a «Nota de voz» y «Ayuda», abre la cámara del teléfono y vuelve a Campo al aceptar la foto. Campo la guarda con su hora y su posición y la lleva al ZIP. Tras cada foto: «Otra foto», «Pedir candidatos con estas fotos» y «Listo». Las fotos de la Nikon o de la cámara normal siguen valiendo; se encajan después por la hora.</p>
   <p><b>Después de cada foto o serie de fotos, una nota de voz</b>: cierra el grupo y dice qué es («quejigo junto al arroyo»; basta «fin»). Si sigue el mismo ejemplar, empezar la nota con «lo mismo» o «sigue el…». Las fotos hechas mientras se graba cuentan para esa nota.</p>
-  <p><b>Ayuda</b> cuando haga falta: fotos mínimas, pruebas sobre el terreno y especies esperables del grupo. <b>La Ayuda no identifica sola</b>: es una lista de lo que conviene fotografiar y probar. Para pedir candidatos, dentro de cada grupo está «📷 Hacer foto y pedir candidatos». Lo marcado se anota solo al salir.</p>
+  <p><b>Ayuda</b> cuando haga falta: fotos mínimas, pruebas sobre el terreno y especies esperables del grupo. <b>La Ayuda no identifica sola</b>; para pedir candidatos, dentro de cada grupo está «📷 Hacer foto y pedir candidatos». Lo marcado se anota solo al salir.</p>
+  <p><b>Muestras</b>: en bolsas de papel numeradas, con una nota de voz que diga el número.</p>
   <p>Aves: Merlin, y guardar en eBird lo que identifique.</p>
-  <p><b>Modo</b>: general, solo botánica, solo aves o pelágicas (aves marinas y cetáceos, para las salidas en barco). Cambia lo que muestran la ayuda y las esperables; se elige en la pantalla de inicio o en el panel, y queda anotado en el diario.</p>
-  <p><b>Candidatos</b>, si hay cobertura: tres caminos. Hacer la foto con «📷 Foto» y pulsar «Pedir candidatos con estas fotos» (hasta cuatro del mismo ejemplar); usar «📷 Hacer foto y pedir candidatos» dentro de un grupo de Ayuda; o, desde «Candidatos con una foto» en el panel, elegir fotos de la galería. Responden Pl@ntNet para plantas y Claude para todo. La respuesta queda en el diario con el nombre de la foto, para el gabinete. Sin cobertura, la consulta espera en el panel hasta que la haya. Las claves se ponen una vez en Ajustes.</p>
+  <p><b>Modo</b>: general, solo botánica, solo aves o pelágicas (aves marinas y cetáceos, para las salidas en barco). Cambia lo que muestran la ayuda y las esperables; queda anotado en el diario.</p>
+  <p><b>Candidatos</b>, si hay cobertura: con «📷 Foto» y «Pedir candidatos con estas fotos», con «📷 Hacer foto y pedir candidatos» dentro de un grupo de Ayuda, o desde «Candidatos con una foto» con fotos de la galería. Responden Pl@ntNet para plantas y Claude para todo. Sin cobertura, la consulta espera en el panel.</p>
   <p>En las esperables, «⚠ Se confunde con…» señala las parejas difíciles; al tocar la foto aparece la del rasgo que las separa.</p>
   <p>Al acabar: «Terminar la salida y guardar» (deja un ZIP en Descargas) y parar la actividad del fēnix.</p>
-  <div class="eti">4 · Gabinete</div>
-  <p>Conectar al ordenador el Samsung (modo «Transferir archivos») y el fēnix, y pasar a Claude el enlace de la lista de eBird. Las fotos de la Nikon, a la carpeta Identificar. Claude recoge las fotos, el track, el ZIP de Campo y Merlin, lo encaja todo por la hora y plantea las dudas; se resuelven con guías, internet y muestras (lupa, microscopio).</p>
-  <div class="eti">5 · Informe final</div>
-  <p>Claude hace la ficha de excursión en PDF, la guarda en «Informes finales» y la anota en el proyecto.</p>
+  <div class="eti">5 · Gabinete, desde el ordenador</div>
+  <p>Conectar al ordenador el Samsung (modo «Transferir archivos») y el fēnix, y pasar a Claude el enlace de la lista de eBird. Las fotos de la Nikon, a la carpeta Identificar. Claude recoge las fotos, el track real, el ZIP de Campo y Merlin, lo encaja todo por la hora y plantea las dudas; se resuelven con guías, internet y muestras (lupa, microscopio).</p>
+  <div class="eti">6 · Informe final</div>
+  <p>Claude hace la ficha de excursión en PDF, con el mapa del track real y dónde se vio cada cosa, y es lo único que se archiva en «Informes finales»; los informes previos se quedan en la carpeta de trabajo de la salida.</p>
   <div class="aviso">Cerrar la aplicación no termina la salida: sigue abierta hasta pulsar «Terminar».</div>`;
 }
 async function cargarFichero(ev){
@@ -461,10 +465,21 @@ async function esperables(pid,clave,q){
 async function verMapa(pid){
   dock(!!S);
   const p=P&&P.id===pid?P:await getv('paquetes',pid);
-  app.innerHTML=barra('Mapa')+`<div class="mapa" id="mp"><img src="${p.mapa.img}" alt="Mapa de la zona"><div class="yo oculto" id="yo"></div></div>
-  <p style="font-size:13px;color:var(--suave)">${p.mapa.fuente==='OpenStreetMap'?'Mapa de OpenStreetMap (el IGN no respondió)':'Mapa raster del IGN'}. El círculo rojo es el punto del informe previo; el azul, dónde estás (si el teléfono lo sabe y estás dentro).</p>`;
-  const pos=await posicion(); const [la0,lo0,la1,lo1]=p.mapa.bbox;
+  const [la0,lo0,la1,lo1]=p.mapa.bbox;
+  const X=lo=>((lo-lo0)/(lo1-lo0)*1000).toFixed(1), Y=la=>((la1-la)/(la1-la0)*1000).toFixed(1);
+  const tr=(p.tracks||[]);
+  const svg=tr.length?`<svg class="trk" viewBox="0 0 1000 1000" preserveAspectRatio="none">${tr.map(t=>`<polyline points="${t.pts.map(q=>X(q[1])+','+Y(q[0])).join(' ')}" fill="none" stroke="#fff" stroke-width="9" stroke-linejoin="round" stroke-linecap="round" vector-effect="non-scaling-stroke" opacity=".85"/><polyline points="${t.pts.map(q=>X(q[1])+','+Y(q[0])).join(' ')}" fill="none" stroke="${t.color||'#d81b60'}" stroke-width="4" stroke-linejoin="round" stroke-linecap="round" vector-effect="non-scaling-stroke"/>`).join('')}${tr.flatMap(t=>(t.wpts||[]).map(w=>`<circle cx="${X(w.lon)}" cy="${Y(w.lat)}" r="9" fill="${t.color||'#d81b60'}" stroke="#fff" stroke-width="3" vector-effect="non-scaling-stroke"/>`)).join('')}</svg>`:'';
+  app.innerHTML=barra('Mapa')+`<div class="mapa" id="mp"><img src="${p.mapa.img}" alt="Mapa de la zona">${svg}<div class="yo oculto" id="yo"></div></div>
+  ${tr.length?`<div class="leyenda">${tr.map(t=>`<div><span style="background:${t.color||'#d81b60'}"></span>${esc(t.nombre)}${t.km?` · ${t.km} km`:''}</div>`).join('')}</div>`:''}
+  <p id="dist" style="font-size:15px"></p>
+  <p style="font-size:13px;color:var(--suave)">${p.mapa.fuente==='OpenStreetMap'?'Mapa de OpenStreetMap (el IGN no respondió)':'Mapa raster del IGN'}. El círculo rojo es el punto del informe previo; las líneas, los tracks previstos (los puntos, sus lugares marcados); el azul, dónde estás (si el teléfono lo sabe y estás dentro). El track real es el del reloj.</p>`;
+  const pos=await posicion();
   if(pos&&pos.lat>la0&&pos.lat<la1&&pos.lon>lo0&&pos.lon<lo1){const y=$('#yo');y.style.left=((pos.lon-lo0)/(lo1-lo0)*100)+'%';y.style.top=((la1-pos.lat)/(la1-la0)*100)+'%';y.classList.remove('oculto');}
+  if(pos&&tr.length){
+    const R=6371000,rad=x=>x*Math.PI/180,d=(a,b,c,e)=>2*R*Math.asin(Math.sqrt(Math.sin(rad(c-a)/2)**2+Math.cos(rad(a))*Math.cos(rad(c))*Math.sin(rad(e-b)/2)**2));
+    let mejor=null; for(const t of tr) for(const q of t.pts){const m=d(pos.lat,pos.lon,q[0],q[1]); if(!mejor||m<mejor.m) mejor={m,t:t.nombre};}
+    if(mejor) $('#dist').textContent = mejor.m<60 ? `Estás sobre el track «${mejor.t}».` : `Estás a ${mejor.m<1000?Math.round(mejor.m)+' m':(mejor.m/1000).toFixed(1)+' km'} del track «${mejor.t}».`;
+  }
 }
 async function diario(sid){
   const s=S&&S.id===sid?S:await getv('sesiones',sid);
