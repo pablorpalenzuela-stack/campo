@@ -1,0 +1,1240 @@
+{
+"version": "2026-11-10",
+"fuente": "Lista fija de Campo para el Cantábrico y el Atlántico ibérico; fotos de iNaturalist",
+"especies": {
+"avemar": [
+{
+"cien": "Morus bassanus",
+"comun": "Alcatraz atlántico",
+"familia": "Sulidae",
+"meses": [
+1,
+2,
+3,
+4,
+5,
+6,
+7,
+8,
+9,
+10,
+11,
+12
+],
+"estatus": "Todo el año; abundante de octubre a marzo",
+"fijarse": "El ave marina más grande: vuelo en cruz, cabeza, cola y alas en punta. Adulto blanco con la mano negra; los jóvenes, pardos y moteados, aclaran en cuatro años. Se lanza en picado.",
+"confunde": [],
+"foto": "pel/Morus_bassanus.jpg",
+"foto_autor": "(c) PÃ©tur Gauti Valgeirsson, some rights reserved (CC BY-NC-SA)",
+"licencia": "cc-by-nc-sa"
+},
+{
+"cien": "Calonectris borealis",
+"comun": "Pardela cenicienta",
+"familia": "Procellariidae",
+"meses": [
+3,
+4,
+5,
+6,
+7,
+8,
+9,
+10
+],
+"estatus": "De marzo a octubre",
+"fijarse": "Grande, parda grisácea por arriba y blanca por abajo, sin contraste en la cabeza, y pico amarillo pálido. Vuelo lento con las alas arqueadas.",
+"confunde": [
+{
+"cien": "Ardenna gravis",
+"comun": "Pardela capirotada"
+}
+],
+"foto": "pel/Calonectris_borealis.jpg",
+"foto_autor": "(c) Luke Foster, some rights reserved (CC BY-NC), uploaded by Luke Foster",
+"licencia": "cc-by-nc"
+},
+{
+"cien": "Ardenna gravis",
+"comun": "Pardela capirotada",
+"familia": "Procellariidae",
+"meses": [
+8,
+9,
+10,
+11
+],
+"estatus": "Paso de agosto a noviembre",
+"fijarse": "Capirote oscuro bien marcado, collar blanco, «U» blanca sobre la cola y mancha oscura en el vientre. Pico oscuro.",
+"confunde": [
+{
+"cien": "Calonectris borealis",
+"comun": "Pardela cenicienta"
+}
+],
+"foto": "pel/Ardenna_gravis.jpg",
+"foto_autor": "(c) Fyn Kynd, some rights reserved (CC BY-SA), uploaded by Fyn Kynd",
+"licencia": "cc-by-sa"
+},
+{
+"cien": "Ardenna grisea",
+"comun": "Pardela sombría",
+"familia": "Procellariidae",
+"meses": [
+8,
+9,
+10,
+11
+],
+"estatus": "Paso de agosto a noviembre",
+"fijarse": "Toda parda oscura, con el pico largo y fino y un panel plateado bajo el ala. Alas estrechas y vuelo rígido.",
+"confunde": [
+{
+"cien": "Puffinus mauretanicus",
+"comun": "Pardela balear"
+},
+{
+"cien": "Stercorarius skua",
+"comun": "Págalo grande"
+}
+],
+"foto": "pel/Ardenna_grisea.jpg",
+"foto_autor": "(c) Oscar Thomas, some rights reserved (CC BY-NC), uploaded by Oscar Thomas",
+"licencia": "cc-by-nc"
+},
+{
+"cien": "Puffinus puffinus",
+"comun": "Pardela pichoneta",
+"familia": "Procellariidae",
+"meses": [
+3,
+4,
+5,
+6,
+7,
+8,
+9,
+10
+],
+"estatus": "Paso de marzo a octubre",
+"fijarse": "Pequeña, negra por arriba y blanca por abajo, con contraste limpio y las infracoberteras de la cola blancas. Vuelo rápido, alternando aleteos y planeos rasantes.",
+"confunde": [
+{
+"cien": "Puffinus mauretanicus",
+"comun": "Pardela balear"
+}
+],
+"foto": "pel/Puffinus_puffinus.jpg",
+"foto_autor": "(c) Andrew Thompson, some rights reserved (CC BY-NC), uploaded by Andrew Thompson",
+"licencia": "cc-by-nc"
+},
+{
+"cien": "Puffinus mauretanicus",
+"comun": "Pardela balear",
+"familia": "Procellariidae",
+"meses": [
+1,
+2,
+6,
+7,
+8,
+9,
+10,
+11,
+12
+],
+"estatus": "De junio a noviembre; algunas en invierno",
+"fijarse": "Como una pichoneta parda: dorso pardo, vientre sucio y las infracoberteras de la cola oscuras. En peligro crítico: anotar cuántas.",
+"confunde": [
+{
+"cien": "Puffinus puffinus",
+"comun": "Pardela pichoneta"
+},
+{
+"cien": "Ardenna grisea",
+"comun": "Pardela sombría"
+}
+],
+"foto": "pel/Puffinus_mauretanicus.jpg",
+"foto_autor": "(c) Jules RENAUD POCHET, some rights reserved (CC BY-NC)",
+"licencia": "cc-by-nc"
+},
+{
+"cien": "Fulmarus glacialis",
+"comun": "Fulmar boreal",
+"familia": "Procellariidae",
+"meses": [
+1,
+2,
+3,
+10,
+11,
+12
+],
+"estatus": "Escaso, sobre todo en invierno",
+"fijarse": "Parece una gaviota gris, pero planea con las alas rígidas, cuello grueso y pico corto con tubos. Sin puntas negras en las alas.",
+"confunde": [
+{
+"cien": "Larus michahellis",
+"comun": "Gaviota patiamarilla"
+}
+],
+"foto": "pel/Fulmarus_glacialis.jpg",
+"foto_autor": "(c) Mark Rosenstein, some rights reserved (CC BY-NC)",
+"licencia": "cc-by-nc"
+},
+{
+"cien": "Hydrobates pelagicus",
+"comun": "Paíño europeo",
+"familia": "Hydrobatidae",
+"meses": [
+5,
+6,
+7,
+8,
+9,
+10
+],
+"estatus": "De mayo a octubre",
+"fijarse": "Del tamaño de un gorrión, negro con el obispillo blanco y una franja blanca bajo el ala. Vuelo de murciélago, pegado al agua.",
+"confunde": [
+{
+"cien": "Hydrobates leucorhous",
+"comun": "Paíño de Leach"
+},
+{
+"cien": "Oceanites oceanicus",
+"comun": "Paíño de Wilson"
+}
+],
+"foto": "pel/Hydrobates_pelagicus.jpg",
+"foto_autor": "(c) Andrew Thompson, some rights reserved (CC BY-NC), uploaded by Andrew Thompson",
+"licencia": "cc-by-nc"
+},
+{
+"cien": "Hydrobates leucorhous",
+"comun": "Paíño de Leach",
+"familia": "Hydrobatidae",
+"meses": [
+9,
+10,
+11
+],
+"estatus": "Otoño, con temporales",
+"fijarse": "Mayor que el europeo, pardo, con la cola ahorquillada y el obispillo blanco partido por una línea oscura. Vuelo saltarín, de golondrina de mar.",
+"confunde": [
+{
+"cien": "Hydrobates pelagicus",
+"comun": "Paíño europeo"
+}
+],
+"foto": "pel/Hydrobates_leucorhous.jpg",
+"foto_autor": "(c) pleasantbaymac, some rights reserved (CC BY-NC), uploaded by pleasantbaymac",
+"licencia": "cc-by-nc"
+},
+{
+"cien": "Oceanites oceanicus",
+"comun": "Paíño de Wilson",
+"familia": "Oceanitidae",
+"meses": [
+7,
+8,
+9
+],
+"estatus": "De julio a septiembre",
+"fijarse": "Negro con el obispillo blanco que llega a los flancos; patas largas que asoman tras la cola y «bailan» sobre el agua. Sin blanco bajo el ala.",
+"confunde": [
+{
+"cien": "Hydrobates pelagicus",
+"comun": "Paíño europeo"
+}
+],
+"foto": "pel/Oceanites_oceanicus.jpg",
+"foto_autor": "(c) John Gale, some rights reserved (CC BY-NC), uploaded by John Gale",
+"licencia": "cc-by-nc"
+},
+{
+"cien": "Stercorarius skua",
+"comun": "Págalo grande",
+"familia": "Stercorariidae",
+"meses": [
+1,
+2,
+3,
+9,
+10,
+11,
+12
+],
+"estatus": "De septiembre a marzo",
+"fijarse": "Robusto, pardo oscuro, del tamaño de una gaviota grande, con una mancha blanca en la base de las primarias que se ve de lejos. Persigue a gaviotas y alcatraces.",
+"confunde": [
+{
+"cien": "Ardenna grisea",
+"comun": "Pardela sombría"
+},
+{
+"cien": "Stercorarius pomarinus",
+"comun": "Págalo pomarino"
+}
+],
+"foto": "pel/Stercorarius_skua.jpg",
+"foto_autor": "(c) Ulrich Latzenhofer, some rights reserved (CC BY-SA)",
+"licencia": "cc-by-sa"
+},
+{
+"cien": "Stercorarius pomarinus",
+"comun": "Págalo pomarino",
+"familia": "Stercorariidae",
+"meses": [
+9,
+10,
+11
+],
+"estatus": "Paso de septiembre a noviembre",
+"fijarse": "Mediano, pecho ancho; el adulto lleva las rectrices centrales en «cuchara». Mancha blanca en el ala menor que en el grande.",
+"confunde": [
+{
+"cien": "Stercorarius parasiticus",
+"comun": "Págalo parásito"
+},
+{
+"cien": "Stercorarius skua",
+"comun": "Págalo grande"
+}
+],
+"foto": "pel/Stercorarius_pomarinus.jpg",
+"foto_autor": "(c) Nigel Voaden, some rights reserved (CC BY)",
+"licencia": "cc-by"
+},
+{
+"cien": "Stercorarius parasiticus",
+"comun": "Págalo parásito",
+"familia": "Stercorariidae",
+"meses": [
+8,
+9,
+10
+],
+"estatus": "Paso de agosto a octubre",
+"fijarse": "Esbelto y de vuelo ágil, con las rectrices centrales en punta. Persigue charranes y gaviotas pequeñas.",
+"confunde": [
+{
+"cien": "Stercorarius pomarinus",
+"comun": "Págalo pomarino"
+},
+{
+"cien": "Stercorarius longicaudus",
+"comun": "Págalo rabero"
+}
+],
+"foto": "pel/Stercorarius_parasiticus.jpg",
+"foto_autor": "(c) Mark Rosenstein, some rights reserved (CC BY-NC), uploaded by Mark Rosenstein",
+"licencia": "cc-by-nc"
+},
+{
+"cien": "Stercorarius longicaudus",
+"comun": "Págalo rabero",
+"familia": "Stercorariidae",
+"meses": [
+8,
+9
+],
+"estatus": "Escaso, agosto y septiembre",
+"fijarse": "El más fino; el adulto lleva las rectrices centrales muy largas y el dorso gris claro. Los jóvenes, muy difíciles de separar del parásito.",
+"confunde": [
+{
+"cien": "Stercorarius parasiticus",
+"comun": "Págalo parásito"
+}
+],
+"foto": "pel/Stercorarius_longicaudus.jpg",
+"foto_autor": "(c) Erik Eckstein, some rights reserved (CC BY-NC), uploaded by Erik Eckstein",
+"licencia": "cc-by-nc"
+},
+{
+"cien": "Rissa tridactyla",
+"comun": "Gaviota tridáctila",
+"familia": "Laridae",
+"meses": [
+1,
+2,
+3,
+10,
+11,
+12
+],
+"estatus": "De octubre a marzo",
+"fijarse": "Pequeña y de alta mar; puntas de las alas negras, «mojadas en tinta», sin blanco, y patas negras. El joven lleva una «M» negra en las alas.",
+"confunde": [
+{
+"cien": "Larus michahellis",
+"comun": "Gaviota patiamarilla"
+},
+{
+"cien": "Hydrocoloeus minutus",
+"comun": "Gaviota enana"
+}
+],
+"foto": "pel/Rissa_tridactyla.jpg",
+"foto_autor": "(c) Marion Goascoz, some rights reserved (CC BY-NC), uploaded by Marion Goascoz",
+"licencia": "cc-by-nc"
+},
+{
+"cien": "Xema sabini",
+"comun": "Gaviota de Sabine",
+"familia": "Laridae",
+"meses": [
+8,
+9,
+10
+],
+"estatus": "Escasa, de agosto a octubre",
+"fijarse": "Pequeña, con un triángulo negro, otro blanco y otro gris en el ala, y la cola ahorquillada.",
+"confunde": [
+{
+"cien": "Rissa tridactyla",
+"comun": "Gaviota tridáctila"
+}
+],
+"foto": "pel/Xema_sabini.jpg",
+"foto_autor": "(c) Jennysweatt, some rights reserved (CC BY-NC), uploaded by Jennysweatt",
+"licencia": "cc-by-nc"
+},
+{
+"cien": "Hydrocoloeus minutus",
+"comun": "Gaviota enana",
+"familia": "Laridae",
+"meses": [
+1,
+2,
+3,
+11,
+12
+],
+"estatus": "Invierno, con temporales",
+"fijarse": "La gaviota más pequeña; adulto con el ala oscura por debajo y sin negro en la punta. Vuelo de fumarel, picoteando el agua.",
+"confunde": [
+{
+"cien": "Rissa tridactyla",
+"comun": "Gaviota tridáctila"
+}
+],
+"foto": "pel/Hydrocoloeus_minutus.jpg",
+"foto_autor": "(c) vyatka, some rights reserved (CC BY-NC), uploaded by vyatka",
+"licencia": "cc-by-nc"
+},
+{
+"cien": "Ichthyaetus melanocephalus",
+"comun": "Gaviota cabecinegra",
+"familia": "Laridae",
+"meses": [
+1,
+2,
+3,
+10,
+11,
+12
+],
+"estatus": "Invierno",
+"fijarse": "Adulto con las alas blancas sin ninguna punta negra, pico rojo y grueso y mancha oscura detrás del ojo en invierno.",
+"confunde": [
+{
+"cien": "Chroicocephalus ridibundus",
+"comun": "Gaviota reidora"
+}
+],
+"foto": "pel/Ichthyaetus_melanocephalus.jpg",
+"foto_autor": "(c) Vitaliy Khustochka, some rights reserved (CC BY-NC)",
+"licencia": "cc-by-nc"
+},
+{
+"cien": "Chroicocephalus ridibundus",
+"comun": "Gaviota reidora",
+"familia": "Laridae",
+"meses": [
+1,
+2,
+3,
+4,
+5,
+6,
+7,
+8,
+9,
+10,
+11,
+12
+],
+"estatus": "Todo el año; más en invierno",
+"fijarse": "Mediana, pico y patas rojos, borde blanco en la parte delantera del ala y puntas negras. En invierno, solo una mancha detrás del ojo.",
+"confunde": [
+{
+"cien": "Ichthyaetus melanocephalus",
+"comun": "Gaviota cabecinegra"
+}
+],
+"foto": "pel/Chroicocephalus_ridibundus.jpg",
+"foto_autor": "(c) Dmitry Dubikovskiy, some rights reserved (CC BY-NC), uploaded by Dmitry Dubikovskiy",
+"licencia": "cc-by-nc"
+},
+{
+"cien": "Larus michahellis",
+"comun": "Gaviota patiamarilla",
+"familia": "Laridae",
+"meses": [
+1,
+2,
+3,
+4,
+5,
+6,
+7,
+8,
+9,
+10,
+11,
+12
+],
+"estatus": "Todo el año",
+"fijarse": "La gaviota grande del puerto: manto gris medio, patas amarillas y pico amarillo con mancha roja. Los jóvenes, pardos y ajedrezados.",
+"confunde": [
+{
+"cien": "Larus fuscus",
+"comun": "Gaviota sombría"
+},
+{
+"cien": "Larus marinus",
+"comun": "Gavión atlántico"
+}
+],
+"foto": "pel/Larus_michahellis.jpg",
+"foto_autor": "(c) JÃ¶rg Hempel, some rights reserved (CC BY-SA), uploaded by JÃ¶rg Hempel",
+"licencia": "cc-by-sa"
+},
+{
+"cien": "Larus fuscus",
+"comun": "Gaviota sombría",
+"familia": "Laridae",
+"meses": [
+1,
+2,
+3,
+9,
+10,
+11,
+12
+],
+"estatus": "Invierno",
+"fijarse": "Algo menor que la patiamarilla y más esbelta; adulto con el manto gris pizarra y las patas amarillas. Los jóvenes, con las primarias muy oscuras.",
+"confunde": [
+{
+"cien": "Larus michahellis",
+"comun": "Gaviota patiamarilla"
+},
+{
+"cien": "Larus marinus",
+"comun": "Gavión atlántico"
+}
+],
+"foto": "pel/Larus_fuscus.jpg",
+"foto_autor": "(c) Niall Perrins, some rights reserved (CC BY-NC), uploaded by Niall Perrins",
+"licencia": "cc-by-nc"
+},
+{
+"cien": "Larus marinus",
+"comun": "Gavión atlántico",
+"familia": "Laridae",
+"meses": [
+1,
+2,
+3,
+10,
+11,
+12
+],
+"estatus": "Invierno, escaso",
+"fijarse": "La gaviota más grande, con el pico muy fuerte; adulto de manto casi negro y patas rosadas. El joven, muy ajedrezado y con la cabeza clara.",
+"confunde": [
+{
+"cien": "Larus fuscus",
+"comun": "Gaviota sombría"
+},
+{
+"cien": "Larus michahellis",
+"comun": "Gaviota patiamarilla"
+}
+],
+"foto": "pel/Larus_marinus.jpg",
+"foto_autor": "(c) Alex Shure, some rights reserved (CC BY-NC), uploaded by Alex Shure",
+"licencia": "cc-by-nc"
+},
+{
+"cien": "Thalasseus sandvicensis",
+"comun": "Charrán patinegro",
+"familia": "Laridae",
+"meses": [
+1,
+2,
+3,
+4,
+5,
+6,
+7,
+8,
+9,
+10,
+11,
+12
+],
+"estatus": "Paso e invernada",
+"fijarse": "Charrán grande y muy blanco, con el pico negro y la punta amarilla. Se lanza al agua en picado.",
+"confunde": [
+{
+"cien": "Sterna hirundo",
+"comun": "Charrán común"
+}
+],
+"foto": "pel/Thalasseus_sandvicensis.jpg",
+"foto_autor": "(c) BJ Stacey, some rights reserved (CC BY-NC), uploaded by BJ Stacey",
+"licencia": "cc-by-nc"
+},
+{
+"cien": "Sterna hirundo",
+"comun": "Charrán común",
+"familia": "Laridae",
+"meses": [
+4,
+5,
+8,
+9,
+10
+],
+"estatus": "Paso de primavera y de otoño",
+"fijarse": "Charrán mediano, gris por arriba, pico rojo con punta negra en verano. Más pequeño y gris que el patinegro.",
+"confunde": [
+{
+"cien": "Thalasseus sandvicensis",
+"comun": "Charrán patinegro"
+}
+],
+"foto": "pel/Sterna_hirundo.jpg",
+"foto_autor": "(c) Bill Keim, some rights reserved (CC BY)",
+"licencia": "cc-by"
+},
+{
+"cien": "Alca torda",
+"comun": "Alca común",
+"familia": "Alcidae",
+"meses": [
+1,
+2,
+3,
+10,
+11,
+12
+],
+"estatus": "De octubre a marzo",
+"fijarse": "Negra por arriba y blanca por abajo, con el pico alto, romo y con una línea blanca; la cola, más larga y en punta que la del arao.",
+"confunde": [
+{
+"cien": "Uria aalge",
+"comun": "Arao común"
+}
+],
+"foto": "pel/Alca_torda.jpg",
+"foto_autor": "(c) António Terra, some rights reserved (CC BY-NC), uploaded by António Terra",
+"licencia": "cc-by-nc"
+},
+{
+"cien": "Uria aalge",
+"comun": "Arao común",
+"familia": "Alcidae",
+"meses": [
+1,
+2,
+3,
+10,
+11,
+12
+],
+"estatus": "De octubre a marzo",
+"fijarse": "Como el alca, pero pardo oscuro por arriba, con el pico fino y puntiagudo y rayas oscuras en los flancos.",
+"confunde": [
+{
+"cien": "Alca torda",
+"comun": "Alca común"
+}
+],
+"foto": "pel/Uria_aalge.jpg",
+"foto_autor": "(c) cassiia, some rights reserved (CC BY-NC), uploaded by cassiia",
+"licencia": "cc-by-nc"
+},
+{
+"cien": "Fratercula arctica",
+"comun": "Frailecillo atlántico",
+"familia": "Alcidae",
+"meses": [
+1,
+2,
+3,
+10,
+11,
+12
+],
+"estatus": "De octubre a marzo",
+"fijarse": "Pequeño y rechoncho, con el pico triangular (más pequeño y apagado en invierno) y la cara gris. Vuela bajo, con aleteo rápido.",
+"confunde": [
+{
+"cien": "Alle alle",
+"comun": "Mérgulo atlántico"
+},
+{
+"cien": "Alca torda",
+"comun": "Alca común"
+}
+],
+"foto": "pel/Fratercula_arctica.jpg",
+"foto_autor": "(c) Paul Steeves, some rights reserved (CC BY-NC), uploaded by Paul Steeves",
+"licencia": "cc-by-nc"
+},
+{
+"cien": "Alle alle",
+"comun": "Mérgulo atlántico",
+"familia": "Alcidae",
+"meses": [
+11,
+12,
+1,
+2
+],
+"estatus": "Raro, en invierno con temporales",
+"fijarse": "Del tamaño de un estornino, sin apenas cuello y con el pico diminuto. Aleteo muy rápido.",
+"confunde": [
+{
+"cien": "Fratercula arctica",
+"comun": "Frailecillo atlántico"
+}
+],
+"foto": "pel/Alle_alle.jpg",
+"foto_autor": "(c) Christoph Moning, some rights reserved (CC BY), uploaded by Christoph Moning",
+"licencia": "cc-by"
+},
+{
+"cien": "Gulosus aristotelis",
+"comun": "Cormorán moñudo",
+"familia": "Phalacrocoracidae",
+"meses": [
+1,
+2,
+3,
+4,
+5,
+6,
+7,
+8,
+9,
+10,
+11,
+12
+],
+"estatus": "Todo el año, en la costa",
+"fijarse": "Más pequeño y fino que el grande, todo negro verdoso, sin blanco en la cara, con la frente abrupta y un moño en primavera.",
+"confunde": [
+{
+"cien": "Phalacrocorax carbo",
+"comun": "Cormorán grande"
+}
+],
+"foto": "pel/Gulosus_aristotelis.jpg",
+"foto_autor": "(c) Tony, some rights reserved (CC BY)",
+"licencia": "cc-by"
+},
+{
+"cien": "Phalacrocorax carbo",
+"comun": "Cormorán grande",
+"familia": "Phalacrocoracidae",
+"meses": [
+1,
+2,
+3,
+4,
+9,
+10,
+11,
+12
+],
+"estatus": "Invierno",
+"fijarse": "Grande y robusto, con la cara y la garganta blancas y el pico grueso. Vuela en fila o en «V».",
+"confunde": [
+{
+"cien": "Gulosus aristotelis",
+"comun": "Cormorán moñudo"
+}
+],
+"foto": "pel/Phalacrocorax_carbo.jpg",
+"foto_autor": "(c) Дмитрий Осипов, some rights reserved (CC BY-NC), uploaded by Дмитрий Осипов",
+"licencia": "cc-by-nc"
+},
+{
+"cien": "Melanitta nigra",
+"comun": "Negrón común",
+"familia": "Anatidae",
+"meses": [
+1,
+2,
+3,
+10,
+11,
+12
+],
+"estatus": "Invierno, cerca de la costa",
+"fijarse": "Pato marino; el macho, todo negro con una mancha amarilla en el pico; la hembra, parda con las mejillas claras. Van en bandos que vuelan en fila sobre el agua.",
+"confunde": [
+{
+"cien": "Phalacrocorax carbo",
+"comun": "Cormorán grande"
+}
+],
+"foto": "pel/Melanitta_nigra.jpg",
+"foto_autor": "(c) Mark, some rights reserved (CC BY-NC), uploaded by Mark",
+"licencia": "cc-by-nc"
+},
+{
+"cien": "Gavia stellata",
+"comun": "Colimbo chico",
+"familia": "Gaviidae",
+"meses": [
+1,
+2,
+3,
+11,
+12
+],
+"estatus": "Invierno",
+"fijarse": "Nada bajo como un cormorán, pero gris por arriba con motas blancas y la cara blanca; el pico fino y algo levantado.",
+"confunde": [
+{
+"cien": "Gavia immer",
+"comun": "Colimbo grande"
+}
+],
+"foto": "pel/Gavia_stellata.jpg",
+"foto_autor": "(c) Erik Eckstein, some rights reserved (CC BY-NC), uploaded by Erik Eckstein",
+"licencia": "cc-by-nc"
+},
+{
+"cien": "Gavia immer",
+"comun": "Colimbo grande",
+"familia": "Gaviidae",
+"meses": [
+1,
+2,
+3,
+11,
+12
+],
+"estatus": "Invierno, escaso",
+"fijarse": "Grande, con el pico fuerte y la cabeza angulosa; en invierno, oscuro por arriba con un semicollar oscuro.",
+"confunde": [
+{
+"cien": "Gavia stellata",
+"comun": "Colimbo chico"
+},
+{
+"cien": "Phalacrocorax carbo",
+"comun": "Cormorán grande"
+}
+],
+"foto": "pel/Gavia_immer.jpg",
+"foto_autor": "(c) Rebecca Scott, some rights reserved (CC BY-NC), uploaded by Rebecca Scott",
+"licencia": "cc-by-nc"
+},
+{
+"cien": "Phalaropus fulicarius",
+"comun": "Falaropo picogrueso",
+"familia": "Scolopacidae",
+"meses": [
+10,
+11,
+12
+],
+"estatus": "Otoño, tras temporales",
+"fijarse": "Limícola pequeña que nada en alta mar como un corcho; en invierno gris claro, con un antifaz negro.",
+"confunde": [],
+"foto": "pel/Phalaropus_fulicarius.jpg",
+"foto_autor": "(c) Paul Cools, some rights reserved (CC BY-NC), uploaded by Paul Cools",
+"licencia": "cc-by-nc"
+}
+],
+"cetaceo": [
+{
+"cien": "Delphinus delphis",
+"comun": "Delfín común",
+"familia": "Delphinidae",
+"meses": [
+1,
+2,
+3,
+4,
+5,
+6,
+7,
+8,
+9,
+10,
+11,
+12
+],
+"estatus": "Todo el año; el más frecuente",
+"fijarse": "Delfín esbelto, con un «reloj de arena» amarillento y gris en el costado y el pico largo. Grupos grandes y muy activos que se acercan a la proa.",
+"confunde": [
+{
+"cien": "Stenella coeruleoalba",
+"comun": "Delfín listado"
+},
+{
+"cien": "Tursiops truncatus",
+"comun": "Delfín mular"
+}
+],
+"foto": "pel/Delphinus_delphis.jpg",
+"foto_autor": "(c) Steven Mlodinow, some rights reserved (CC BY-NC), uploaded by Steven Mlodinow",
+"licencia": "cc-by-nc"
+},
+{
+"cien": "Stenella coeruleoalba",
+"comun": "Delfín listado",
+"familia": "Delphinidae",
+"meses": [
+1,
+2,
+3,
+4,
+5,
+6,
+7,
+8,
+9,
+10,
+11,
+12
+],
+"estatus": "Aguas profundas, todo el año",
+"fijarse": "Como el común, pero con una lista oscura del ojo al ano y una mancha clara que sube hacia la aleta dorsal. Salta mucho.",
+"confunde": [
+{
+"cien": "Delphinus delphis",
+"comun": "Delfín común"
+}
+],
+"foto": "pel/Stenella_coeruleoalba.jpg",
+"foto_autor": "(c) Alfiero Brisotto, some rights reserved (CC BY-NC-SA)",
+"licencia": "cc-by-nc-sa"
+},
+{
+"cien": "Tursiops truncatus",
+"comun": "Delfín mular",
+"familia": "Delphinidae",
+"meses": [
+1,
+2,
+3,
+4,
+5,
+6,
+7,
+8,
+9,
+10,
+11,
+12
+],
+"estatus": "Todo el año, más cerca de la costa",
+"fijarse": "Grande y gris uniforme, con el pico corto y grueso y la aleta dorsal alta y curvada. Grupos pequeños.",
+"confunde": [
+{
+"cien": "Delphinus delphis",
+"comun": "Delfín común"
+},
+{
+"cien": "Grampus griseus",
+"comun": "Calderón gris"
+}
+],
+"foto": "pel/Tursiops_truncatus.jpg",
+"foto_autor": "(c) Frank Krasovec, some rights reserved (CC BY-NC), uploaded by Frank Krasovec",
+"licencia": "cc-by-nc"
+},
+{
+"cien": "Grampus griseus",
+"comun": "Calderón gris",
+"familia": "Delphinidae",
+"meses": [
+1,
+2,
+3,
+4,
+5,
+6,
+7,
+8,
+9,
+10,
+11,
+12
+],
+"estatus": "Talud, escaso",
+"fijarse": "Cabeza redonda sin pico, cuerpo gris lleno de cicatrices blancas y aleta dorsal alta y oscura.",
+"confunde": [
+{
+"cien": "Tursiops truncatus",
+"comun": "Delfín mular"
+}
+],
+"foto": "pel/Grampus_griseus.jpg",
+"foto_autor": "(c) Robin Gwen Agarwal, some rights reserved (CC BY-NC), uploaded by Robin Gwen Agarwal",
+"licencia": "cc-by-nc"
+},
+{
+"cien": "Globicephala melas",
+"comun": "Calderón común",
+"familia": "Delphinidae",
+"meses": [
+1,
+2,
+3,
+4,
+5,
+6,
+7,
+8,
+9,
+10,
+11,
+12
+],
+"estatus": "Talud y aguas profundas",
+"fijarse": "Negro, con la cabeza globosa y la aleta dorsal baja, ancha y curvada hacia atrás. Grupos familiares que nadan despacio.",
+"confunde": [
+{
+"cien": "Orcinus orca",
+"comun": "Orca"
+}
+],
+"foto": "pel/Globicephala_melas.jpg",
+"foto_autor": "(c) Vsevolod Rudyi, some rights reserved (CC BY), uploaded by Vsevolod Rudyi",
+"licencia": "cc-by"
+},
+{
+"cien": "Orcinus orca",
+"comun": "Orca",
+"familia": "Delphinidae",
+"meses": [
+1,
+2,
+3,
+4,
+5,
+6,
+7,
+8,
+9,
+10,
+11,
+12
+],
+"estatus": "Rara",
+"fijarse": "Negra con la mancha blanca detrás del ojo y la «silla» gris; el macho, con la aleta dorsal recta y muy alta.",
+"confunde": [
+{
+"cien": "Globicephala melas",
+"comun": "Calderón común"
+}
+],
+"foto": "pel/Orcinus_orca.jpg",
+"foto_autor": "(c) Sherry Kirkvold, some rights reserved (CC BY-NC), uploaded by Sherry Kirkvold",
+"licencia": "cc-by-nc"
+},
+{
+"cien": "Phocoena phocoena",
+"comun": "Marsopa común",
+"familia": "Phocoenidae",
+"meses": [
+1,
+2,
+3,
+4,
+5,
+6,
+7,
+8,
+9,
+10,
+11,
+12
+],
+"estatus": "Rara en el Cantábrico, costera",
+"fijarse": "Pequeña, sin pico, con la aleta dorsal baja y triangular. Asoma poco y sin saltar.",
+"confunde": [
+{
+"cien": "Tursiops truncatus",
+"comun": "Delfín mular"
+}
+],
+"foto": "pel/Phocoena_phocoena.jpg",
+"foto_autor": "(c) John D Reynolds, some rights reserved (CC BY-NC), uploaded by John D Reynolds",
+"licencia": "cc-by-nc"
+},
+{
+"cien": "Ziphius cavirostris",
+"comun": "Zifio de Cuvier",
+"familia": "Ziphiidae",
+"meses": [
+1,
+2,
+3,
+4,
+5,
+6,
+7,
+8,
+9,
+10,
+11,
+12
+],
+"estatus": "Cañones submarinos",
+"fijarse": "Cuerpo largo con la aleta dorsal pequeña muy atrás; la cabeza, más clara en los adultos y con cicatrices. Se sumerge mucho tiempo.",
+"confunde": [
+{
+"cien": "Tursiops truncatus",
+"comun": "Delfín mular"
+}
+],
+"foto": "pel/Ziphius_cavirostris.jpg",
+"foto_autor": "(c) Luke Foster, some rights reserved (CC BY-NC), uploaded by Luke Foster",
+"licencia": "cc-by-nc"
+},
+{
+"cien": "Physeter macrocephalus",
+"comun": "Cachalote",
+"familia": "Physeteridae",
+"meses": [
+1,
+2,
+3,
+4,
+5,
+6,
+7,
+8,
+9,
+10,
+11,
+12
+],
+"estatus": "Talud, escaso",
+"fijarse": "Soplo oblicuo hacia delante y a la izquierda; cabeza enorme y cuadrada, piel arrugada y una joroba en lugar de aleta. Enseña la cola al sumergirse.",
+"confunde": [
+{
+"cien": "Balaenoptera physalus",
+"comun": "Rorcual común"
+}
+],
+"foto": "pel/Physeter_macrocephalus.jpg",
+"foto_autor": "(c) Wayne and Pam Osborn, some rights reserved (CC BY-NC), uploaded by Wayne and Pam Osborn",
+"licencia": "cc-by-nc"
+},
+{
+"cien": "Balaenoptera physalus",
+"comun": "Rorcual común",
+"familia": "Balaenopteridae",
+"meses": [
+5,
+6,
+7,
+8,
+9,
+10,
+11
+],
+"estatus": "Verano y otoño, en el talud",
+"fijarse": "Enorme, con el soplo alto y vertical y la aleta dorsal pequeña y lejos de la cabeza; mandíbula derecha blanca. No enseña la cola.",
+"confunde": [
+{
+"cien": "Physeter macrocephalus",
+"comun": "Cachalote"
+},
+{
+"cien": "Balaenoptera acutorostrata",
+"comun": "Rorcual aliblanco"
+}
+],
+"foto": "pel/Balaenoptera_physalus.jpg",
+"foto_autor": "(c) Cephas, some rights reserved (CC BY-SA)",
+"licencia": "cc-by-sa"
+},
+{
+"cien": "Balaenoptera acutorostrata",
+"comun": "Rorcual aliblanco",
+"familia": "Balaenopteridae",
+"meses": [
+1,
+2,
+3,
+4,
+5,
+6,
+7,
+8,
+9,
+10,
+11,
+12
+],
+"estatus": "Escaso",
+"fijarse": "Rorcual pequeño, de soplo casi invisible, con una banda blanca en la aleta pectoral y la dorsal curvada.",
+"confunde": [
+{
+"cien": "Balaenoptera physalus",
+"comun": "Rorcual común"
+}
+],
+"foto": "pel/Balaenoptera_acutorostrata.jpg",
+"foto_autor": "(c) finsandphotography, some rights reserved (CC BY-NC)",
+"licencia": "cc-by-nc"
+},
+{
+"cien": "Megaptera novaeangliae",
+"comun": "Yubarta",
+"familia": "Balaenopteridae",
+"meses": [
+1,
+2,
+3,
+4,
+5,
+6,
+7,
+8,
+9,
+10,
+11,
+12
+],
+"estatus": "Rara",
+"fijarse": "Aletas pectorales larguísimas y blancas, joroba bajo la dorsal y la cola, con el dibujo blanco, al sumergirse.",
+"confunde": [
+{
+"cien": "Balaenoptera physalus",
+"comun": "Rorcual común"
+}
+],
+"foto": "pel/Megaptera_novaeangliae.jpg",
+"foto_autor": "(c) Wayne and Pam Osborn, some rights reserved (CC BY-NC), uploaded by Wayne and Pam Osborn",
+"licencia": "cc-by-nc"
+}
+]
+}
+}

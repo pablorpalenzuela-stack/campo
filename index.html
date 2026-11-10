@@ -83,6 +83,7 @@ textarea{min-height:80px}
 .cien{font-weight:400;color:var(--suave)}.zoom .cien{color:#ccc}.esp .cien i,.esp .conf i{display:inline;font-size:inherit;color:inherit}
 .btn[disabled]{opacity:.5}
 .toast{position:fixed;left:16px;right:16px;bottom:100px;background:#1d241f;color:#fff;border-radius:10px;padding:12px 14px;z-index:30;font-size:15px}
+.esp.fuera{opacity:.55}
 </style>
 </head>
 <body>
@@ -101,7 +102,7 @@ textarea{min-height:80px}
 </div></div>
 <script>
 'use strict';
-const VERSION = '1.7.0';
+const VERSION = '1.8.0';
 /* ---------- grupos de ayuda ---------- */
 const GRUPOS = [
  {id:'lenosa', ico:'🌳', nom:'Árbol o arbusto', esp:['lenosa'],
@@ -136,6 +137,14 @@ const GRUPOS = [
   fotos:['Sin tocarlo: el animal entero','La cabeza de cerca','El dorso y el costado','El sitio: piedra, agua, hojarasca'],
   pruebas:['Tamaño aproximado','No manipular: casi todos están protegidos'],
   pista:''},
+ {id:'avemar', ico:'🌊', nom:'Ave marina', esp:['avemar'],
+  fotos:['Ráfaga en cuanto aparezca, con el zoom al máximo','En vuelo: el ala por arriba y por abajo','La cabeza y el pico','Posada en el agua: de lado','El bando entero, para contar'],
+  pruebas:['Tamaño frente a una gaviota patiamarilla','¿Planea rasante con las alas rígidas o aletea?','¿Sola, en balsa o detrás de un pesquero?','Contar o estimar cuántas'],
+  pista:'Desde el barco, con el sol a la espalda. Al acabar cada ráfaga, nota de voz: qué era y cuántas.'},
+ {id:'cetaceo', ico:'🐬', nom:'Cetáceo', esp:['cetaceo'],
+  fotos:['La aleta dorsal de lado','El costado y el dibujo de color','El soplo, si lo hay','La cola al sumergirse'],
+  pruebas:['Cuántos y cómo nadan: ¿saltan, vienen a la proa?','¿Soplo visible? ¿Alto, bajo, oblicuo?','Tamaño frente al barco','Tiempo entre inmersiones'],
+  pista:'Si no da tiempo a la foto, nota de voz con el tamaño, la aleta, el soplo y el número. Preguntar a la tripulación o a los biólogos.'},
  {id:'roca', ico:'🪨', nom:'Roca o mineral', esp:[],
   fotos:['El afloramiento de lejos','Una superficie fresca, con moneda','La textura de cerca (grano)'],
   pruebas:['¿Raya el vidrio o la navaja?','Ácido, si lo llevas: ¿efervesce?','¿Atrae el imán?','¿Pesa más de lo que parece?'],
@@ -152,14 +161,28 @@ const MODOS = {
   aviso:'Modo botánica: la ayuda y las esperables muestran solo plantas y hongos. Cada ejemplar, con foto general al principio y al final.'},
  aves:{nom:'Solo aves', grupos:['ave'], esp:['ave'],
   aviso:'Modo aves: Merlin escuchando y, al acabar, la lista a eBird. Ayuda abre directamente las aves. Una nota de voz para lo que oyes y no ves.'},
+ pelagicas:{nom:'Pelágicas', grupos:['avemar','cetaceo'], esp:['avemar','cetaceo'],
+  aviso:'Modo pelágicas: solo aves marinas y cetáceos, con la lista fija del Cantábrico y el Atlántico (primero, los de esta época). Al acabar cada ráfaga, nota de voz: qué era y cuántos.'},
 };
+/* ---------- lista fija de aves marinas y cetáceos (pelagicas.json, también sin conexión) ---------- */
+let PEL=null; fetch('./pelagicas.json').then(r=>r.json()).then(j=>{PEL=j;}).catch(()=>{});
+const MARINOS=['avemar','cetaceo'];
+function espP(p){
+  const base=Object.assign({}, (p&&p.especies)||{});
+  if(PEL){ const mes=new Date().getMonth()+1;
+    for(const k of MARINOS) base[k]=(PEL.especies[k]||[]).map(e=>{
+      const g=p?buscarEsp(p,e.cien):null;
+      return Object.assign({},e,{ahora:e.meses.includes(mes),citas_epoca:g?g.citas_epoca:null,citas:g?g.citas:null});
+    }).sort((a,b)=>(b.ahora-a.ahora)||((b.citas_epoca||0)-(a.citas_epoca||0)));}
+  return base;
+}
 let MODO = (()=>{try{const m=localStorage.getItem('campo.modo');return MODOS[m]?m:'general';}catch(e){return 'general';}})();
 const gruposModo=()=>MODOS[MODO].grupos?GRUPOS.filter(g=>MODOS[MODO].grupos.includes(g.id)):GRUPOS;
 function modoHTML(){return `<div class="eti">Modo</div><div class="pest">${Object.entries(MODOS).map(([k,m])=>`<button class="${k===MODO?'on':''}" data-modo="${k}">${m.nom}</button>`).join('')}</div>`;}
 function activarModo(repinta){app.querySelectorAll('[data-modo]').forEach(b=>b.onclick=async()=>{
   if(b.dataset.modo===MODO) return; MODO=b.dataset.modo; ls('campo.modo',MODO);
   if(S&&!S.fin){S.modo=MODO;await evento({tipo:'modo',modo:MODO});} toast('Modo: '+MODOS[MODO].nom); repinta();});}
-const NOMBRE_ESP = {lenosa:'Árboles y arbustos',herbacea:'Matas y hierbas',ave:'Aves',mamifero:'Mamíferos',insecto:'Insectos',aracnido:'Arácnidos',reptil:'Reptiles',anfibio:'Anfibios',hongo:'Hongos y líquenes'};
+const NOMBRE_ESP = {lenosa:'Árboles y arbustos',herbacea:'Matas y hierbas',ave:'Aves',mamifero:'Mamíferos',insecto:'Insectos',aracnido:'Arácnidos',reptil:'Reptiles',anfibio:'Anfibios',hongo:'Hongos y líquenes',avemar:'Aves marinas',cetaceo:'Cetáceos'};
 
 /* ---------- almacenamiento (IndexedDB) ---------- */
 let dbp;
@@ -268,7 +291,7 @@ function instrucciones(){
   <p><b>Después de cada foto o serie de fotos, una nota de voz</b>: cierra el grupo y dice qué es («quejigo junto al arroyo»; basta «fin»). Si sigue el mismo ejemplar, empezar la nota con «lo mismo» o «sigue el…». Las fotos hechas mientras se graba cuentan para esa nota.</p>
   <p><b>Ayuda</b> cuando haga falta: fotos mínimas, pruebas sobre el terreno y especies esperables del grupo. <b>La Ayuda no identifica sola</b>: es una lista de lo que conviene fotografiar y probar. Para pedir candidatos, dentro de cada grupo está «📷 Hacer foto y pedir candidatos». Lo marcado se anota solo al salir.</p>
   <p>Aves: Merlin, y guardar en eBird lo que identifique.</p>
-  <p><b>Modo</b>: general, solo botánica o solo aves. Cambia lo que muestran la ayuda y las esperables; se elige en la pantalla de inicio o en el panel, y queda anotado en el diario.</p>
+  <p><b>Modo</b>: general, solo botánica, solo aves o pelágicas (aves marinas y cetáceos, para las salidas en barco). Cambia lo que muestran la ayuda y las esperables; se elige en la pantalla de inicio o en el panel, y queda anotado en el diario.</p>
   <p><b>Candidatos</b>, si hay cobertura: tres caminos. Hacer la foto con «📷 Foto» y pulsar «Pedir candidatos con estas fotos» (hasta cuatro del mismo ejemplar); usar «📷 Hacer foto y pedir candidatos» dentro de un grupo de Ayuda; o, desde «Candidatos con una foto» en el panel, elegir fotos de la galería. Responden Pl@ntNet para plantas y Claude para todo. La respuesta queda en el diario con el nombre de la foto, para el gabinete. Sin cobertura, la consulta espera en el panel hasta que la haya. Las claves se ponen una vez en Ajustes.</p>
   <p>En las esperables, «⚠ Se confunde con…» señala las parejas difíciles; al tocar la foto aparece la del rasgo que las separa.</p>
   <p>Al acabar: «Terminar la salida y guardar» (deja un ZIP en Descargas) y parar la actividad del fēnix.</p>
@@ -303,8 +326,8 @@ async function verPaquete(id){
 function confirmar(t){return window.confirm(t);}
 function espHTML(e,pos){
   const rg=e.rasgos&&e.rasgos.length;
-  return `<div class="esp ${pos?'pos':''}" data-e="${esc(e.cien)}">${e.foto?`<img src="${e.foto}" alt="" data-z="${esc(e.cien)}">`:(rg?`<img src="${e.rasgos[0].foto}" alt="" data-z="${esc(e.cien)}">`:'<div class="sinfoto"></div>')}
-  <div class="n">${nomHTML(e.comun,e.cien)}${e.fijarse?`<div class="fj">👁 ${esc(e.fijarse)}</div>`:''}${confHTML(e)}</div><div class="c">${e.citas_epoca} / ${e.citas}</div></div>`;
+  return `<div class="esp ${pos?'pos':''} ${e.estatus&&!e.ahora?'fuera':''}" data-e="${esc(e.cien)}">${e.foto?`<img src="${e.foto}" alt="" data-z="${esc(e.cien)}">`:(rg?`<img src="${e.rasgos[0].foto}" alt="" data-z="${esc(e.cien)}">`:'<div class="sinfoto"></div>')}
+  <div class="n">${nomHTML(e.comun,e.cien)}${e.fijarse?`<div class="fj">👁 ${esc(e.fijarse)}</div>`:''}${e.estatus?`<div class="fj">📅 ${esc(e.estatus)}${e.ahora?'':' · no es su época'}</div>`:''}${confHTML(e)}</div><div class="c">${e.citas!=null?e.citas_epoca+' / '+e.citas:(e.estatus?(e.ahora?'ahora':''):'')}</div></div>`;
 }
 // Regla de Pablo (1-XI-2026): el nombre vulgar más corriente y siempre el científico entre paréntesis
 function nomHTML(comun,cien){ return comun?`${esc(comun)} <span class="cien">(<i>${esc(cien)}</i>)</span>`:`<i>${esc(cien)}</i>`; }
@@ -314,7 +337,7 @@ function confHTML(e){
 }
 function zoomEsp(e){
   const z=document.createElement('div');z.className='zoom';
-  z.innerHTML=`${e.foto?`<img src="${e.foto}" alt="">`:''}<div style="margin-top:10px"><b>${nomHTML(e.comun,e.cien)}</b></div>${e.fijarse?`<div style="margin-top:6px">${esc(e.fijarse)}</div>`:''}${e.foto?`<small>Foto: iNaturalist, ${esc(e.foto_autor||'')}</small>`:''}
+  z.innerHTML=`${e.foto?`<img src="${e.foto}" alt="">`:''}<div style="margin-top:10px"><b>${nomHTML(e.comun,e.cien)}</b></div>${e.fijarse?`<div style="margin-top:6px">${esc(e.fijarse)}</div>`:''}${e.estatus?`<div style="margin-top:6px">📅 ${esc(e.estatus)}</div>`:''}${e.foto?`<small>Foto: iNaturalist, ${esc(e.foto_autor||'')}</small>`:''}
   ${(e.rasgos||[]).map(r=>`<div class="rg"><div class="eti" style="color:#ddd">El rasgo que lo separa${e.confunde&&e.confunde.length?' de '+e.confunde.map(c=>nomHTML(c.comun,c.cien)).join(', '):''}</div><img src="${r.foto}" alt=""><p>${esc(r.pie)}</p><small>${esc(r.autor)}</small></div>`).join('')}`;
   z.onclick=()=>z.remove();document.body.appendChild(z);
 }
@@ -344,7 +367,7 @@ function panel(){
   <div class="aviso">${MODOS[MODO].aviso?esc(MODOS[MODO].aviso):'Pulsa <b>Foto</b> para abrir la cámara; la foto queda guardada con su hora y su posición. Pulsa <b>Nota de voz</b> para contar lo que la foto no recoge. <b>Ayuda</b> lista las fotos y pruebas que pide cada grupo; no identifica sola: para candidatos, usa <b>Foto</b> o «Candidatos con una foto».'}</div>
   <button class="btn prim" id="cand">📷 Candidatos con una foto<small>Necesita cobertura; si no la hay, queda pendiente</small></button>
   <button class="btn oculto" id="pend"></button>
-  <div class="fila">${P?'<button class="btn mini" id="vinf">Informe</button><button class="btn mini" id="vesp">Esperables</button>':''}${P&&P.mapa?'<button class="btn mini" id="vmap">Mapa</button>':''}<button class="btn mini" id="vdia">Diario</button></div>
+  <div class="fila">${P?'<button class="btn mini" id="vinf">Informe</button>':''}${P||MODO==='pelagicas'?'<button class="btn mini" id="vesp">Esperables</button>':''}${P&&P.mapa?'<button class="btn mini" id="vmap">Mapa</button>':''}<button class="btn mini" id="vdia">Diario</button></div>
   <button class="btn" id="txt">✎ Nota escrita</button>
   ${modoHTML()}
   <button class="btn peligro" id="fin" style="margin-top:22px">Terminar la salida y guardar</button>`;
@@ -353,7 +376,8 @@ function panel(){
   pendientesDe(S.id).then(l=>{const b=$('#pend');if(!b||!l.length)return;b.classList.remove('oculto');
     b.innerHTML=`⏳ ${l.length} consulta${l.length>1?'s':''} pendiente${l.length>1?'s':''}<small>${navigator.onLine?'Tocar para hacerlas ahora':'Sin conexión; tocar cuando la haya'}</small>`;
     b.onclick=()=>resolverPendientes();});
-  if(P){$('#vinf').onclick=()=>ir(verInforme);$('#vesp').onclick=()=>ir(esperables,P.id,null,null);}
+  if(P) $('#vinf').onclick=()=>ir(verInforme);
+  if($('#vesp')) $('#vesp').onclick=()=>ir(esperables,P?P.id:null,null,null);
   if(P&&P.mapa) $('#vmap').onclick=()=>ir(verMapa,P.id);
   $('#vdia').onclick=()=>ir(diario,S.id);
   $('#txt').onclick=()=>ir(notaEscrita);
@@ -385,7 +409,7 @@ function grupo(gid,directo){
   // Al salir por cualquier vía (atrás, otro botón), se anota sola si se marcó algo
   alSalirDeGrupo=()=>{ if(!anotado&&(sel.fotos.size||sel.pruebas.size||sel.posibles.size)) anotar(); };
   const pinta=()=>{
-    const lista=P?g.esp.flatMap(k=>(P.especies[k]||[])):[];
+    const EP=espP(P); const lista=g.esp.flatMap(k=>(EP[k]||[]));
     const q=($('#bq')?.value||'').toLowerCase();
     app.innerHTML=barra(g.ico+' '+g.nom)+`
     <button class="btn prim" id="gfoto">📷 Hacer foto y pedir candidatos<small>Abre la cámara; luego puedes añadir más fotos del mismo ejemplar</small></button>
@@ -399,7 +423,7 @@ function grupo(gid,directo){
     <button class="btn" id="gcand">📷 Candidatos con una foto<small>Con cobertura: ${PLANTNET_GRUPOS.includes(g.id)?'Pl@ntNet y Claude':'Claude'}</small></button>
     ${lista.length?`<div class="eti">Esperables aquí (${lista.length}) · toca si te parece</div><input type="search" id="bq" placeholder="Buscar nombre…" value="${esc(q)}">
     ${lista.filter(e=>!q||(e.comun+' '+e.cien).toLowerCase().includes(q)).slice(0,60).map(e=>espHTML(e,sel.posibles.has(e.cien))).join('')}
-    <p style="font-size:13px;color:var(--suave)">Cifras: citas en esta época / en todo el año (GBIF). ${esc(P.fuente_especies||'')}</p>`:''}`;
+    <p style="font-size:13px;color:var(--suave)">${MARINOS.includes(g.id)?'Lista fija de aves marinas y cetáceos del Cantábrico y el Atlántico ibérico; primero, los de esta época. Fotos de iNaturalist.':'Cifras: citas en esta época / en todo el año (GBIF). '+esc((P&&P.fuente_especies)||'')}</p>`:''}`;
     app.querySelectorAll('[data-f]').forEach(x=>x.onclick=()=>{const i=+x.dataset.f;sel.fotos.has(i)?sel.fotos.delete(i):sel.fotos.add(i);pinta();});
     app.querySelectorAll('[data-r]').forEach(x=>x.onclick=()=>{const i=+x.dataset.r;sel.pruebas.has(i)?sel.pruebas.delete(i):sel.pruebas.add(i);pinta();});
     app.querySelectorAll('[data-e]').forEach(x=>x.onclick=()=>{const c=x.dataset.e;sel.posibles.has(c)?sel.posibles.delete(c):sel.posibles.add(c);pinta();});
@@ -413,19 +437,20 @@ function grupo(gid,directo){
 }
 async function esperables(pid,clave,q){
   dock(!!S);
-  const p=P&&P.id===pid?P:await getv('paquetes',pid);
-  const todasClaves=Object.keys(p.especies||{}).filter(k=>(p.especies[k]||[]).length);
+  const p=!pid?null:(P&&P.id===pid?P:await getv('paquetes',pid));
+  const EP=espP(p);
+  const todasClaves=Object.keys(EP).filter(k=>(EP[k]||[]).length);
   let verTodo=false;
-  const filtra=()=>todasClaves.filter(k=>verTodo||!MODOS[MODO].esp||MODOS[MODO].esp.includes(k));
+  const filtra=()=>todasClaves.filter(k=>verTodo||(MODOS[MODO].esp?MODOS[MODO].esp.includes(k):!MARINOS.includes(k)));
   let claves=filtra();
   clave=clave&&claves.includes(clave)?clave:claves[0];
   const pinta=()=>{
-    const lista=p.especies[clave]||[]; const qq=(q||'').toLowerCase();
+    const lista=EP[clave]||[]; const qq=(q||'').toLowerCase();
     const ocultos=todasClaves.length-claves.length;
-    app.innerHTML=barra('Esperables')+(ocultos?`<div class="aviso">${esc(MODOS[MODO].nom)}: se ven solo ${claves.length} de ${todasClaves.length} grupos. <a href="#" id="vtodo">Ver todos</a></div>`:'')+`<div class="pest">${claves.map(k=>`<button class="${k===clave?'on':''}" data-k="${k}">${esc(NOMBRE_ESP[k]||k)} (${p.especies[k].length})</button>`).join('')}</div>
+    app.innerHTML=barra('Esperables')+(ocultos?`<div class="aviso">${esc(MODOS[MODO].nom)}: se ven solo ${claves.length} de ${todasClaves.length} grupos. <a href="#" id="vtodo">Ver todos</a></div>`:'')+`<div class="pest">${claves.map(k=>`<button class="${k===clave?'on':''}" data-k="${k}">${esc(NOMBRE_ESP[k]||k)} (${EP[k].length})</button>`).join('')}</div>
     <input type="search" id="bq" placeholder="Buscar nombre…" value="${esc(q||'')}">
     ${lista.filter(e=>!qq||(e.comun+' '+e.cien+' '+e.familia).toLowerCase().includes(qq)).map(e=>espHTML(e,false)).join('')}
-    <p style="font-size:13px;color:var(--suave)">Citas en esta época / en todo el año. ${esc(p.fuente_especies||'')}</p>`;
+    <p style="font-size:13px;color:var(--suave)">${MARINOS.includes(clave)?'Lista fija de Campo para el Cantábrico y el Atlántico ibérico; primero, los de esta época; en gris, los que no lo son. '+(p?'Si el informe previo los cita, van sus cifras. ':'')+'Fotos de iNaturalist.':'Citas en esta época / en todo el año. '+esc((p&&p.fuente_especies)||'')}</p>`;
     app.querySelectorAll('[data-k]').forEach(b=>b.onclick=()=>{clave=b.dataset.k;q='';pinta();});
     const vt=$('#vtodo'); if(vt) vt.onclick=e=>{e.preventDefault();verTodo=true;claves=filtra();pinta();};
     activarZoom(lista);
@@ -693,10 +718,11 @@ async function claudeEnviar(body,op={}){
 async function pedirClaude(c,pn,pq){
   const k=cfg('anthropic'); if(!k) throw new Error('falta la clave de Claude (Ajustes)');
   const gr=GRUPOS.find(x=>x.id===c.grupo);
-  const esp=pq?gr.esp.flatMap(e=>pq.especies[e]||[]).slice(0,150).map(e=>(e.comun?e.comun+' ':'')+'('+e.cien+')').join('; '):'';
+  const EP=espP(pq); const mar=MARINOS.includes(gr.id);
+  const esp=(pq||mar)?gr.esp.flatMap(e=>EP[e]||[]).slice(0,150).map(e=>(e.comun?e.comun+' ':'')+'('+e.cien+')'+(mar&&!e.ahora?' [no es su época]':'')).join('; '):'';
   const texto=`Soy naturalista aficionado y estoy en el campo, en España. Te mando ${c.fotos.length} foto(s) de algo que me parece: ${gr.nom}.
 Fecha y hora: ${c.t}. Lugar: ${pq?pq.titulo:'sin informe previo'}${c.pos?` (${c.pos.lat}, ${c.pos.lon})`:''}.
-${c.nota?'Lo que veo y la foto no recoge: '+c.nota+'\n':''}${esp?'Especies citadas cerca en GBIF, de más a menos frecuentes: '+esp+'\n':''}${pn&&pn.length?'Pl@ntNet propone: '+pn.map(x=>x.cien+' '+x.score+' %').join(', ')+'\n':''}
+${c.nota?'Lo que veo y la foto no recoge: '+c.nota+'\n':''}${esp?(mar?'Estoy en el mar, en un barco. Aves marinas y cetáceos esperables en el Cantábrico y el Atlántico ibérico, primero los de esta época: ':'Especies citadas cerca en GBIF, de más a menos frecuentes: ')+esp+'\n':''}${pn&&pn.length?'Pl@ntNet propone: '+pn.map(x=>x.cien+' '+x.score+' %').join(', ')+'\n':''}
 Dame hasta cinco candidatos, del más al menos probable. Prefiere las especies de la lista si encajan con lo que se ve, pero no te limites a ella. Si la foto no permite pasar de género o de familia, dilo así. Sé honesto con la confianza. Escribe en español de España. Responde solo con este JSON, sin nada más:
 {"candidatos":[{"cien":"nombre científico","comun":"nombre común en España","confianza":"alta|media|baja","por_que":"el rasgo visible que lo apoya, en una frase","comprobar":"qué mirar ahora en el sitio para confirmarlo o descartarlo"}],"falta":"la foto o la prueba que más ayudaría, en una frase"}`;
   const content=[]; for(const f of c.fotos) content.push({type:'image',source:{type:'base64',media_type:'image/jpeg',data:await b64(f.blob)}});
