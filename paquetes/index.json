@@ -20,25 +20,25 @@
    "id": "20261114-altomira",
    "titulo": "Altomira (PR-CU 45) y yesos de Caracenilla",
    "fecha": "2026-11-14",
-   "generado": "2026-11-10T16:39",
+   "generado": "2026-11-13T10:01",
    "archivo": "20261114-altomira.campo.json",
-   "bytes": 4820984
+   "bytes": 4821660
   },
   {
    "id": "20261114-el-hito",
    "titulo": "Laguna de El Hito: entrada de las grullas",
    "fecha": "2026-11-14",
-   "generado": "2026-11-10T16:39",
+   "generado": "2026-11-13T10:01",
    "archivo": "20261114-el-hito.campo.json",
-   "bytes": 5680511
+   "bytes": 5681187
   },
   {
    "id": "20261114-yesos",
    "titulo": "Yesos de Caracenilla",
    "fecha": "2026-11-14",
-   "generado": "2026-11-10T18:13",
+   "generado": "2026-11-13T10:01",
    "archivo": "20261114-yesos.campo.json",
-   "bytes": 3897095
+   "bytes": 3897771
   }
  ]
 }
